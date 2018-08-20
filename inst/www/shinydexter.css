@@ -1,0 +1,717 @@
+
+body{padding-top:70px;}
+div.navbar-header{
+  width:0;
+  height:0;
+  overflow:hidden;
+}
+@media only screen and (max-width: 768px) {
+  /*allow for stacked navbar*/
+  body{padding-top:258px;}
+}
+
+#app_quit{ cursor:pointer;}
+
+#project_load_icon{
+	position:fixed;
+	width:100%;
+	height:100%;
+	top:0;
+	left:0;
+	z-index:200;
+}
+
+#project_load_icon .loader {
+  z-index:100;
+  position:fixed;
+  top:calc(50% - 150px);
+  left:calc(50% - 150px);
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 150px;
+  height: 150px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#example_datasets .card{
+	margin: 10px;
+	max-width: 440px;
+	display:inline-block;
+	cursor:pointer;
+	vertical-align:top;
+}
+#example_datasets .card:hover{
+	background-color:#e6e6e6;
+}
+
+div.help-page-outer{
+  max-height:calc(100vh - 75px);
+  overflow-y:auto;
+}
+
+div.help-page{
+  width:70%;
+  margin: auto;
+  max-width:60em;
+}
+
+#col-ctt-item{
+  max-height:calc(100vh - 16ex);
+  overflow-y:auto;
+}
+
+.collapsed .collapsed-invis{
+  display:none;
+}
+.collapsed .collapsed-vis{
+  display: inherit;
+}
+.collapsed-vis{
+  display:none;
+}
+
+
+#TOC{
+  position:absolute;
+  max-width:13%;
+  left:1%;
+  top:8em;
+  border: 1px solid gray;
+  padding:5px;
+  padding-left:0px;
+  border-radius:5px;
+}
+#TOC a{
+  text-decoration:none;
+  color:black;
+  padding:2px;
+}
+#TOC ul{
+  list-style:none;
+  padding-left:2ex;
+}
+#TOC a:hover{
+  background-color:seashell;
+}
+
+@media only screen and (max-width: 60em)
+{
+  #TOC{display:none;}
+}
+
+
+.help-page table th, table.min-table th{
+  padding:5px;
+  border-bottom: 1px solid gray;
+}
+.help-page table, table.min-table{
+  border-bottom: 1px solid gray;
+  margin:0.5em;
+}
+
+.help-page td, table.min-table td{
+  padding-left:5px;
+  padding-right:5px;
+}
+
+.well{
+  background:none !important;
+}
+.shiny-text-output{
+  background: none !important;
+}
+
+.form-control[readonly]{
+  background-color:#f8f8f8 !important;
+}
+
+div.full_download_buttons{
+  height:0;
+  overflow:hidden;
+}
+
+.dropdown .dt-button:not(.fa){
+  padding: 4px !important;
+}
+
+.dataTable tfoot td{
+	vertical-align:top;
+}
+
+.dataTable tfoot td{	
+	border-bottom:1px solid black;
+	padding:0 !important;
+}
+.dataTable tfoot td>div{
+	position:relative;
+}
+
+.dataTable tfoot td>div>div{
+	overflow:visible;
+	background-color:lightgray;
+	white-space:nowrap;
+    margin-top:1px;
+	margin-bottom:1px;
+	text-align:left;
+	font-size:smaller;
+	padding-left:2px;
+	cursor:default;
+	border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+.dataTable tfoot td>div>div:first-child{
+	margin-top:3px;
+}
+.dataTable tfoot td>div>div:last-child{
+	margin-bottom:3px;
+}
+
+div.dataTables_scrollFoot tfoot tr td{
+border-left:1px solid #efecec;
+}
+
+.dataTable tfoot td img{
+	position:absolute;
+	width:100%;
+	height:auto;
+	max-height:120px;
+	right:0;
+	bottom:0;
+	max-width:200px;
+	padding-bottom: calc(25px - 25%); /* sort of working hack to get the plot x-axis at about similar baseline*/
+}
+
+
+
+div.shiny-input-container-inline{
+  margin-bottom:0;
+  display:inline-block;
+}
+
+.shiny-input-container-inline div.selectize-control{
+  margin-bottom:0;
+}
+
+.btn-loading-container {
+  margin-left: 10px;
+  font-size: 1.2em;
+}
+.btn-done-indicator {
+  color: green;
+}
+.btn-err {
+  margin-top: 10px;
+  color: red;
+}
+
+.datatables .dropdown a:first-child{
+  float:left;
+}
+
+.dropdown .dt-buttons a{
+  border:1px solid #ddd;
+  border-radius:2px;
+  background:white;
+  padding:5px;
+  text-align:center;
+  width:2.5em;
+  vertical-align: bottom;
+}
+
+.dropdown .dt-buttons a.fa{
+  font-size: 15px;
+}
+
+
+
+.dropdown div.dt-buttons{
+  display: inline-block;
+  float: none;
+  margin-left: 1em;
+  margin-right:2em;
+  margin-top:1em;
+  margin-bottom:3px;
+  white-space:nowrap;
+}
+
+.dropdown div.dt-buttons .scope{
+  font-style: italic;
+  width:100px;
+  margin-right:-100px;
+  position:relative;
+  top:-2em;
+  display:inline-block;
+}
+
+.datatables div.dropdown{
+  float:left;
+  margin-right:1em;
+}
+
+div.img-select{
+  overflow-x: auto;
+}
+.img-select img{
+  margin: 4px;
+  padding: 2px;
+}
+
+.img-select .disabled img{
+  cursor:not-allowed;
+  opacity: 0.5;
+}
+
+.img-select img.active{
+  border: 1px solid black;
+  border-radius: 2px;
+}
+
+div.img-select-scrollbody{
+  white-space:nowrap;
+}
+
+div.img-select-grouping{
+ /* border:1px solid #ddd; */
+  background-color:#fff;
+  display:inline-block;
+  padding:2px;
+  border-radius: 4px 4px 0 0;
+  padding-left:1em;
+  padding-right:1em;
+}
+
+div.img-select-grouping > div{
+/*  text-align:center; */
+  padding-top:5px;
+  padding-bottom:2px;
+}
+div.img-select-grouping > div:empty{
+  display:none;
+}
+
+div.img-select-grouping.active{
+  border-bottom-color:transparent;
+}
+div.img-select-grouping:not(.active){
+  border-color:transparent;
+  border-bottom-color:#ddd;
+  opacity:0.5;
+}
+
+td.numeric, td.dec-1, td.dec-2, td.dec-3{
+  text-align:right;
+}
+
+.jqstooltip {
+  width: auto !important;
+  height: auto !important;
+}
+
+#rules, #item_properties, #person_properties{
+
+  padding:1em;
+}
+
+.project-buttons{
+  border-bottom: 1px solid #ddd;
+  padding:2px;
+  position:relative;
+  top:-20px;
+  left:-14px;
+}
+
+.project-buttons button{
+  display:inline-block;
+  font-size: 14px;
+  border:none;
+}
+
+#oplm_dat td{ 
+  border:none;
+  padding-top:1px;
+  padding-bottom:1px;
+}
+
+#oplm_dat tbody{
+  font-family:monospace;
+  font-size: 9pt;
+}
+
+
+#design_plot{	background:white;}
+
+/* *** some extra datatable styling *** */
+
+div.dataTables_scroll + div.dataTables_length {
+  padding-top: 11px;
+}
+
+.dataTable tbody td{
+  white-space:nowrap;
+}
+
+div.dataTables_paginate a.previous.disabled,
+div.dataTables_paginate a.previous.disabled + span + a.next.disabled,
+div.dataTables_paginate > span a:first-child:last-child
+{
+  visibility: hidden;
+}
+
+div.shiny-input-container-inline ~ button.inline{
+  vertical-align: text-bottom;
+  margin-bottom: 3px;
+}
+
+button.inline{
+  margin-bottom:0px;
+  vertical-align:bottom;
+}
+
+
+/* custom alert */
+.alert-light{
+    border: 1px solid lightgray;
+}
+
+
+/************* BOOTSTRAP FUTURE ***************/
+.card {
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: .25rem;
+}
+
+.card-title {
+    margin-bottom: .75rem;
+}
+
+.card-body {
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    padding: 1.25rem;
+}
+
+.card-header:first-child {
+    border-radius: calc(.25rem - 1px) calc(.25rem - 1px) 0 0;
+}
+
+
+.card-header {
+    padding: .75rem 1.25rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    text-align:center;
+}
+
+.border-primary {
+    border-color: #007bff!important;
+}
+
+/*  end bootstrap future  */
+
+/************** PREDICATE HELPER ***************/
+
+span.pr-helper-button{
+	vertical-align:top;
+	color: #555;
+	font-size:120%;
+	margin:4px;
+	padding:3px;
+}
+span.pr-helper-button:hover{
+	border: 1px solid #ccc;
+	border-radius:2px;
+	margin:3px;
+	
+}
+
+div.pred_helper.card{
+  z-index:100;
+  border: 1px solid gray;
+  padding:5px;
+  box-shadow:5px 5px 10px lightslategray;
+  position: absolute;
+  left:0;
+  white-space:normal;
+}
+
+.pred_helper input, .pred_lines select, .pred_lines button
+{
+  height:25px;
+  line-height:1.5;
+  font-size: 12px;
+  border-radius:2px;
+}
+.pred_lines input{border: 1px solid #ccc;padding-left:3px;}
+
+div.pred_helper th, div.pred_helper td{
+  text-align:center;
+  padding:3px;
+}
+
+
+tr:first-child:last-child .btn_remove_row{ visibility: hidden;}
+
+
+.pred_helper td{vertical-align:top;white-space:nowrap;}
+
+.pred_helper tbody tr:first-child td:first-child select,
+.pred_helper tr.group-member td:first-child select,
+.pred_helper tr.group-end td:first-child select,
+.pred_helper tr.group-member td:nth-child(2) select,
+.pred_helper tr.group-end td:nth-child(2) select
+{
+  visibility:hidden;
+}
+.pred_helper tr:not(.group-member):not(.group-end) td:last-child button:last-child{
+	display:none;
+}
+
+.pred_helper td:last-child{
+	text-align:left;
+}
+
+
+.pred_helper tr.odd{
+  background: #ece6e6;
+}
+
+input.invalid, select.invalid, textarea.invalid
+{
+  border-color: #dc3545;
+}
+
+
+.invalid-feedback{
+    display:none;
+    margin-top: .25rem;
+    font-size: .875rem;
+    color: #dc3545;
+}
+
+input.invalid + .invalid-feedback,
+select.invalid + .invalid-feedback,
+textarea.invalid + .invalid-feedback {
+  display: block;
+}
+
+/*  end predicate helper  */
+
+/************** PLOT SLIDER ***************/
+
+
+
+
+div.plot_slider.uninitialized .glyphicon{ 
+  visibility: hidden;
+}
+
+div.plot_slider
+{
+  margin:auto;
+}
+
+div.plot_slider > div:first-child
+{
+  height:79%;
+  position:relative;
+}
+
+div.plot_slider .img_nav
+{
+  position:absolute;
+  width:20%;
+  height:100%;
+  cursor:pointer;
+  z-index:150;
+}
+
+div.plot_slider .plot_left{ left:0;height:100%;top:0;}
+div.plot_slider .plot_right{ right:0;height:100%;top:0;}
+
+div.plot_slider div.slide_right
+{
+  float:right;
+  width:20px;
+  height:100%;
+}
+
+div.plot_slider div.slide_left
+{
+  float:left;
+  width:20px;
+  height:100%;
+}
+
+div.plot_slider div.thumbs{
+  width:100%;
+  height:19%;
+  position:relative;
+}
+
+div.plot_slider div.slidearea
+{
+  float:left;
+  position:relative;
+  width: calc(100% - 50px) ;
+  height:100%;
+  overflow:hidden;
+}
+
+div.plot_slider div.slider
+{
+  position:absolute;
+  left:0;
+  height: 100%;
+  white-space: nowrap;
+}
+
+div.plot_slider div.slider img{
+  margin-left:8px;
+  height:calc(100% - 4px);
+  margin-top:2px;
+}
+
+div.plot_slider img{
+  -khtml-user-select: none;
+  -o-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+img.plot_active{
+  outline: 1px solid black;
+  outline-offset: 1px;
+}
+
+/* end plot slider */
+
+
+div.select_slider .img_nav
+{
+  position:absolute;
+  width:20%;
+  height:100%;
+  cursor:pointer;
+  z-index:150;
+}
+
+div.select_slider div.slide_right
+{
+  float:right;
+  width:20px;
+  height:100%;
+}
+
+div.select_slider div.slide_left
+{
+  float:left;
+  width:20px;
+  height:100%;
+}
+
+div.select_slider div.thumbs{
+  width:100%;
+  height:100%;
+  position:relative;
+}
+
+div.select_slider div.slidearea
+{
+  float:left;
+  position:relative;
+  width: calc(100% - 50px) ;
+  height:100%;
+  overflow:hidden;
+}
+
+div.select_slider div.slider
+{
+  position:absolute;
+  left:0;
+  height: 100%;
+  white-space: nowrap;
+}
+
+div.select_slider div.slider img{
+  margin-left:8px;
+  height:calc(100% - 4px);
+  margin-top:2px;
+}
+
+div.select_slider img{
+  -khtml-user-select: none;
+  -o-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+
+
+
+/*********** MARKDOWN FORMATTING FOR VIGNETTES **************/
+
+
+code{white-space: pre;}
+
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+
