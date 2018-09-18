@@ -17,7 +17,7 @@ $.extend(dtSearchBinding, {
     return $(el).val();
   },
   setValue: function(el, value) {
-    $(el).closest('table.dataTable').DataTable({retrieve:true}).search(calue).draw();
+    $(el).closest('table.dataTable').DataTable({retrieve:true}).search(value).draw();
   },
   subscribe: function(el, callback) {
     $(el).on("change", function(e) {
@@ -47,10 +47,12 @@ $.extend(dtread_binding, {
     if($(el).find('.dataTable').length === 0){ return(null)}
     else 
     { 
-      var dt = $(el).find('.dataTable').eq(0).DataTable({retrieve:true});
       // unfortunately the shiny datables version is rather old and the column interface does not work
       // so columns have no retrievable names
       // use header instead but this is a bit awkward if the fixedcolumns extension is also used
+	  // hack is to omit classnames containing 'clone'
+	  var dt = $(el).find('.dataTable').filter(function(i,el){return(el.className.match(/clone/i) === null)}).DataTable({retrieve:true});
+	  
       var colnames = $(dt.columns().header()).map(function(i,e)
         {
           var n = $.trim($(this).text());
@@ -63,6 +65,7 @@ $.extend(dtread_binding, {
         colnames = colnames.slice(0,colnames.nthIndexOf(colnames[0],2));
       }
       var res = {};
+	  console.log(colnames)
       $.each(colnames , function(i,n)
       {
         res[n] = dt.column(i, {page: 'all'}).data().toArray();
@@ -151,7 +154,7 @@ jQuery(function()
         
         var cell = dt.cell(td);
         var old_data = cell.data();
-        var editor = $('<input>');
+        var editor = $('<input class="dt-editor-field">');
         if(typeof(old_data) === 'number') 
 		{
 			// for some reason cannot get this to work in firefox
@@ -366,7 +369,7 @@ dt_numcol = function(dtsettings){
 
 dt_btn_dropdown = function(dtsettings){
   var api = new $.fn.dataTable.Api(dtsettings);
-  var btn = $('<a class="fa fa-download" href="#">')
+  var btn = $('<a href="#"><span class="glyphicon glyphicon-floppy-disk"/></a>')
     .click(function(e){
       $(this).next().toggleClass('hidden');
     });
@@ -405,45 +408,259 @@ dt_show_row = function(dtsettings, rownum)
   }
 }
 
+dt_add_column_btn = function(dtsettings){
+	var api = new $.fn.dataTable.Api(dtsettings);	
+	var flt = $(api.table().container()).find('div.dataTables_filter');
+
+	if(flt.find('div.dt-add-col').length==0)
+	{
+		flt.append('<div class="dt-add-col"><a><span class="glyphicon glyphicon-plus"></span></a></div>');
+		flt.find('.dt-add-col a').click(dt_toggle_addcol_dialog);
+	}
+}
+
+dt_toggle_addcol_dialog = function(e)
+{
+	if($(this).parent().find('div.dt-add-col-dialog').length>0)
+	{
+		$(this).parent().find('div.dt-add-col-dialog').remove();
+		$(this).removeClass('dlg-open');
+	}
+	else
+	{
+		var dlg = $('<div class="card dt-add-col-dialog">' +
+					'<div class="card-header">Add column</div>' +
+					'<div class="card-body"><form><p><table><tbody>' +
+					'<tr><td>name</td><td><input class="form-control" name="prop_name"/><div class="invalid-feedback" style="margin-left:1em;">Not a valid column name</div></td></tr>'+
+					'<tr><td>type</td><td><select class="form-control" name="prop_type"><option value="character">text</option><option value="integer">integer number</option><option value="double">decimal number</option></select></td></tr>'+
+					'<tr><td>default value</td><td><input class="form-control" name="prop_dflt"/></td></tr>'+
+					'</tbody></table></p></form>'+
+					'<p><a href="#" class="btn btn-primary ok-btn">Ok</a><a href="#" class="btn btn-default can-btn">Cancel</a></p></div></div>')
+			.appendTo($(this).parent());
+		
+		$(this).addClass('dlg-open');
+		
+		dlg.find('select').change(function(e){
+			var me = $(this);
+			var dfl = dlg.find('input[name="prop_dflt"]');
+			if(me.val() == 'character')
+			{
+				dfl.attr('type','text').val('');
+			} else
+			{
+				dfl.attr('type','number').val(0);
+			}			
+		});
+		
+		dlg.find('.can-btn').click(function(){dlg.closest('div.dt-add-col').find('.dlg-open').removeClass('dlg-open'); dlg.remove();});
+		dlg.find('.ok-btn').click(function(){
+			var nm_inp = $(dlg).find('input[name="prop_name"]');
+			if(nm_inp.val().trim().match(/^\D/) !== null)
+			{
+				var dt_id = dlg.closest('div.datatables.shiny-bound-output').attr('id');
+				Shiny.onInputChange(dt_id+'_add_column', dlg.serializeObject());
+			}
+			else
+			{
+				nm_inp.addClass('invalid');
+				return false;
+			}		
+		});
+		
+	}
+
+
+}
 
 
 draw_dt_footer = function(dtsettings){
-
+	var plot_height=100;
 	var api = new $.fn.dataTable.Api(dtsettings);	
-	var cont = $(api.table().container())
+	
+// to do: maybe try https://github.com/flot/flot, easier axis
 
-	if( cont.find('tfoot img').length > 0)
+	plot_footer = function(dtsettings)
 	{
-		cont.find('tfoot tr').height(0);
-		var maxh = Math.max.apply(null, cont.find('tfoot img').map(function (){return $(this).height()}).get());
+		var api = new $.fn.dataTable.Api(dtsettings);	
+		var cont = $(api.table().container());
+		if(cont.find('tfoot.dt-footer-plots').length>0)
+		{
+			if(cont.find('tfoot.dt-footer-plots tr:first-child').height()<100)
+				cont.find('tfoot.dt-footer-plots tr:first-child').height(100);	
+	
+			// bugfix for footer misalignment with scroll
+			/*
+			if(cont.find('.dataTables_scrollBody').length > 0)
+			{
+				var widths = $.map(cont.find('.dataTables_scrollBody tr[role="row"]:first-child td'), function(e,i) {return($(e).outerWidth())});
+				console.log(cont.find('.dataTables_scrollBody tr[role="row"]:first-child td'))
+				
+				cont.find('.dataTables_scrollFootInner table').css('table-layout','fixed');		
+				cont.find('.dataTables_scrollFootInner colgroup').remove();
+				cont.find('.dataTables_scrollFootInner table').append('<colgroup>'+$.map(widths,function(e,i){return '<col style="width:'+e+'px">'}).join('')+'</colgroup>');
+				cont.find('.dataTables_scrollFootInner tfoot.dt-footer-plots tr:first-child td').each(function(i,e){ $(this).width(widths[i])})
+			}
+			*/
+		}
+		cont.find('tfoot.dt-footer-plots td').each(function(i,e){update_footplot(e)});
+
+	}	
+	plot_footer(dtsettings)
 		
-		cont.find('div.dataTables_scrollFoot tfoot tr').height(maxh+2);
-		
-		cont.on( 'column-sizing.dt', function ( e, settings ) {
-			$(this).find('tfoot tr').height(0);
-			var maxh = Math.max.apply(null, $(this).find('tfoot img').map(function (){return $(this).height()}).get());
+	$(api.table().container()).on( 'column-sizing.dt', function ( e, settings ) {
+		var api = new $.fn.dataTable.Api(settings);			
+		plot_footer(settings);
+		setTimeout(function(){api.table().draw('page')},50); 
+	});	
+}
 
-			$(this).find('div.dataTables_scrollFoot tfoot tr').height(maxh+2);
-			
-			var api = new $.fn.dataTable.Api(settings);	
-			setTimeout(function(){api.table().draw('page')},50); 
-		});
-		/*
-			// Disable TBODY scoll bars
-		cont.find('.dataTables_scrollBody').css({
-			'overflow': 'hidden',
-			'border': '0'
-		});
 
-		// Enable TFOOT scoll bars
-		cont.find('.dataTables_scrollFoot').css({'overflow-x': 'auto','overflow-y':'hidden'});
 
-		// Sync TFOOT scrolling with TBODY
-		cont.find('.dataTables_scrollFoot').on('scroll', function () {
-			$('.dataTables_scrollBody').scrollLeft($(this).scrollLeft());
-		}); */
+update_footplot = function(td, html)
+{
+	td = $(td);
+
+	
+	if(typeof html !== "undefined")
+	{
+		var tmp = $(html);
+		td.empty().append(tmp.children());		
+		td.attr('style',tmp.attr('style'))
 	}
 	
+	td.find('div.sparkhist').each(function()
+	{
+		var me = $(this);
+			
+		me.find('canvas').remove();
+		
+		var width = me.closest('td').innerWidth();
+
+		var values = me.data('values');
+		var nbars = values.length;
+		var barw = Math.floor(width/nbars);
+		width = barw * nbars;
+		
+		
+		var height = Math.min(width,100);
+		var axis = false
+		
+		if(height>50)
+		{
+			height = height-15;
+			axis=true;		
+		}
+
+		me.sparkline(values, 
+			{type: 'bar', barColor: '#bfb5b6', barSpacing: 0, zeroAxis: false, barWidth: barw, height:height+'px',width:width+'px'});
+			
+			
+		if(axis)
+		{
+			var mn =  parseFloat(me.data('min'))
+			var mx =  parseFloat(me.data('max'))
+			
+			var ticks = 4;
+			
+			var canv = $('<canvas width="' + width + 'px" height="15px">').appendTo(me).get(0);
+
+			var ctx = canv.getContext('2d');
+			ctx.lineWidth=1;
+			ctx.strokeStyle="#404040";
+			ctx.fillStyle="#404040";
+			ctx.clearRect(0, 0, width , 15);
+			ctx.moveTo(0,2.5);
+			ctx.lineTo(width, 2.5);
+			ctx.stroke();
+			ctx.textBaseline="top"; 
+			ctx.font="8px Arial"
+				
+			var tickx;
+			for(var i=0;i<=ticks-1;i++)
+			{
+				if(i==0){ ctx.textAlign="start"}
+				else if(i==ticks-1){ ctx.textAlign="end"}
+				else ctx.textAlign="center";
+				tickx = Math.max(Math.min(Math.round(width*i/(ticks-1))+.5,width-.5),1.5)
+				ctx.moveTo(tickx,2.5);
+				ctx.lineTo(tickx, 4.5);
+				ctx.stroke();
+				ctx.fillText(Math.round(mn+i*(mx-mn)/(ticks-1)),tickx,4.5);
+			}
+				
+				
+		}
+		me.find('canvas').css('display','block');
+	});
+
+	
+	td.find('div.sparkdensity').each(function()
+	{
+		var me = $(this);
+		me.find('canvas').remove();
+			
+		var width = me.parent().width();
+		var values = me.data('values');
+					
+		var height = Math.min(width,100);
+		var axis = false
+
+		if(height>50)
+		{
+			height = height-16;
+			axis=true;		
+		}
+
+		me.sparkline(values, 
+			{type: 'line', spotColor: '', minSpotColor: '',maxSpotColor: '', height:height, width:width,
+				numberFormatter:function(x){return(x.toFixed(3))}
+			});
+
+		if(axis)
+		{
+			var mn =  parseFloat(me.data('min'))
+			var mx =  parseFloat(me.data('max'))
+				
+			var ticks = 4;
+			
+			var canv = $('<canvas width="' + width + 'px" height="14px">').appendTo(me).get(0);
+			var ctx = canv.getContext('2d');
+			ctx.lineWidth=1;
+			ctx.strokeStyle="#404040";
+			ctx.fillStyle="#404040";
+			ctx.clearRect(0, 0, width , 15);
+			ctx.moveTo(0,2.5);
+			ctx.lineTo(width, 2.5);
+			ctx.stroke();
+			ctx.textBaseline="top"; 
+			ctx.font="8px Arial"
+				
+			var tickx;
+				
+			if(mx-mn>ticks)
+			{
+				var numformat = Math.round
+			}
+			else
+			{
+				var numformat = function(x){return x.toFixed(1)}
+			}
+			for(var i=0;i<=ticks-1;i++)
+			{
+				if(i==0){ ctx.textAlign="start"}
+				else if(i==ticks-1){ ctx.textAlign="end"}
+				else ctx.textAlign="center";
+				tickx = Math.max(Math.min(Math.round(width*i/(ticks-1))+.5,width-.5),1.5);
+				ctx.moveTo(tickx,2.5);
+				ctx.lineTo(tickx, 4.5);
+				ctx.stroke();
+				ctx.fillText(numformat(mn+i*(mx-mn)/(ticks-1)),tickx,4.5);
+			}
+		}
+	});
+	
+	td.find('canvas').css('display','block');	
+
 }
 
 

@@ -23,8 +23,6 @@ var shinydexter = {
 };
 
 
-
-
 get_input_groups = function(selector)
 {
   var $obj = $();
@@ -49,6 +47,80 @@ hide_inputs = function(selector) {get_input_groups(selector).hide()}
 
 show_inputs = function(selector) {get_input_groups(selector).show()}
 
+
+// custom table of input elements
+var inputlistBinding = new Shiny.InputBinding();
+$.extend(inputlistBinding, {
+  find: function(scope) {
+    return $(scope).find("div.inputList");
+  },
+  getValue: function(el) {
+	return $(el).serializeObject();
+  },
+  setValue: function(el, value) {
+    $.each(value,function(name, val){
+		$(el).find('input[name="' + name + '"]').val(val);
+	});
+  },
+  subscribe: function(el, callback) {
+    $(el).on("change.inputList", function(e) {
+      callback();
+    });
+  },
+  unsubscribe: function(el) {
+    $(el).off("div.inputList");
+  },
+  receiveMessage: function(el, message) {
+	var me = $(el);
+	//console.log(message)
+	if(message.hasOwnProperty('fieldset'))
+	{
+		me.find('table').remove();	
+		me.append('<table><tbody>' +
+							$.map(message.fieldset, function(val,nm)
+							{
+								var tr = val.type == 'hidden' ? '<tr style="display:none">' : '<tr>'
+								return tr + '<td>'+nm+':</td><td><input name="'+nm+'" type="'+val.type+'"/></td></tr>';
+							}).join('') +
+						'</tbody></table>');
+	}
+	if(message.hasOwnProperty('value'))
+	{
+		$.each(message.value, function(nm, val)
+		{
+			me.find('input[name="'+nm+'"]').val(val);
+		});
+	}
+  }
+});
+
+Shiny.inputBindings.register(inputlistBinding);
+
+
+// custom multi toggle button
+var mtoggleBinding = new Shiny.InputBinding();
+$.extend(mtoggleBinding, {
+  find: function(scope) {
+    return $(scope).find("div.multi-toggle-input");
+  },
+  getValue: function(el) {
+	return $(el).find('button.btn-primary').data('value');
+  },
+  setValue: function(el, value) {
+    $(el).find('button').removeClass('btn-primary');
+	$(el).find('button[data-val="'+value+'"]').addClass('btn-primary');
+  },
+  subscribe: function(el, callback) {
+    $(el).on("change", function(e) {
+      callback();
+    });
+  },
+  unsubscribe: function(el) {
+    $(el).off("div.multi-toggle-input");
+  }
+});
+
+Shiny.inputBindings.register(mtoggleBinding);
 
 // custom range as two numeric inputs
 var erangeBinding = new Shiny.InputBinding();
@@ -86,6 +158,8 @@ $(function()
       return false;
   });
   
+  // id for body to use in shinyjs
+  $('body').attr('id','doc-body');
   
   //insert a quit button
   var navlist = $('ul.navbar-nav');
@@ -118,7 +192,6 @@ $(function()
     }
   });
 
-
   $(document).on('change','.e-range-input input:first-child', function(e)
   {
     //$(this).next().attr('min',$(this).val());
@@ -146,6 +219,7 @@ $(function()
     
     $(this)
       .removeClass('btn-default').addClass('btn-primary');
+	$(this).trigger('change');
   });
   
   $(document).click(function(){$('.tooltip').remove()});
@@ -167,7 +241,6 @@ $(function()
   });
   
   $('#example_datasets div[data-dataset]').click(function(e){
-	console.log($(this).data('dataset'))
 	Shiny.onInputChange('example_datasets',$(this).data('dataset'));
   });
   
@@ -201,6 +274,12 @@ $(function()
   });
   
 
+   // live update of footer plots
+  Shiny.addCustomMessageHandler("update_footplot",
+    function(message){
+		update_footplot(message.jqstring, message.html);
+    }
+  );
 
 
   // make some information from the dexter db available for javascript
@@ -242,10 +321,8 @@ $(function()
       
 	  if(message.hasOwnProperty('error'))
 	  {
-
 		slider.empty();
-		me.find('.alert').css('display','initial').text(message.error);
-		
+		me.find('.alert').css('display','initial').text(message.error);		
 	  } else
 	  {
 		me.find('.alert').css('display','none').text('');
@@ -260,7 +337,7 @@ $(function()
 			  var img = $('<img>').attr('src', e.src).attr('image_id', e.image_id);
 				slider.append(img);
 			});
-		  me.removeClass('uninitialized');
+		  //me.removeClass('uninitialized');
 		  indx=0;
 		  if(!message.hasOwnProperty('selected'))
 		  {
@@ -281,6 +358,8 @@ $(function()
 			}
 		});
 	  }
+	  slider.find('img').length>0 ? me.removeClass('uninitialized') : me.addClass('uninitialized');
+	  
 	  
     }
   );

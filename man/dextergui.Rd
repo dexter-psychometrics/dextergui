@@ -16,3 +16,23 @@ Within the gui you can move to subdirectories of \code{wd} but not further up th
 \description{
 Opens a shiny application providing a graphical user interface to dexter.
 }
+\details{
+The best results are achieved when the gui is opened in a browser (Chrome, Brave, FireFox). Somewhat
+less aesthetically pleasing results are achieved in Internet Explorer. The Edge browser is not supported.
+
+The native RStudio browser does not currently support downloads of plots and tables. Starting the gui
+in the browser automatically can be achieved in multiple ways. One way is to set the shiny.launch.browser option to true.
+}
+\examples{
+\dontrun{
+
+options(shiny.launch.browser = TRUE)
+
+
+dextergui()
+
+}
+
+
+
+}

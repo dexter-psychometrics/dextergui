@@ -11,6 +11,25 @@
 #' @param wd where dextergui looks for and saves project files, defaults to current working directory. 
 #' Within the gui you can move to subdirectories of \code{wd} but not further up the tree than \code{wd}.
 #' 
+#' @details
+#' The best results are achieved when the gui is opened in a browser (Chrome, Brave, FireFox). Somewhat
+#' less aesthetically pleasing results are achieved in Internet Explorer. The Edge browser is not supported.
+#' 
+#' The native RStudio browser does not currently support downloads of plots and tables. Starting the gui
+#' in the browser automatically can be achieved in multiple ways. One way is to set the shiny.launch.browser option to true.
+#' 
+#' @examples
+#' \dontrun{
+#' 
+#' options(shiny.launch.browser = TRUE)
+#' 
+#' 
+#' dextergui()
+#' 
+#' }
+#' 
+#' 
+#' 
 dextergui = function(dbpath = NULL, wd = getwd()){
 roots = c('.' = normalizePath(wd))
 if(!is.null(dbpath) && !file.exists(dbpath))
@@ -25,11 +44,10 @@ default_reactive = list(rules = NULL, new_rules = NULL, ctt_items=NULL, ctt_book
 inter_booklet = NULL, inter_plot_items = NULL, item_properties=NULL,
 import_data=NULL, parms=NULL, person_abl = NULL, selected_ctt_item = NULL,
 person_properties=NULL, new_person_properties = NULL, abl_tables=NULL,
-abl_varinfo=NULL, oplm_preview=NULL, 
+abl_varinfo=NULL, oplm_preview=NULL, plausible_values=NULL,
 ctt_items_settings = list(keep_search = FALSE), 
-update_person_properties=TRUE, update_item_properties=TRUE)
-start_reactive = list(coef_format = 'norm', stack_facet='stacked', abp_stack_facet = 'stacked',
-project_name='No project loaded yet' )
+update_person_properties=TRUE, update_item_properties=TRUE, update_enorm_plots=FALSE)
+start_reactive = list(coef_format = 'norm', project_name='No project loaded yet' )
 values = do.call(reactiveValues, modifyList(default_reactive, start_reactive, keep.null=TRUE))
 interaction_models = delayed_list$new()
 if(tolower(Sys.info()['sysname']) == "windows" && substr(roots[1],1,2) %in% c('\\\\','//')){
@@ -47,12 +65,15 @@ value = dbpth[1,1])})
 init_project = function(){
 show('project_load_icon')
 hide('prj_alter_rules')
+reset('doc-body')
 booklets = dbGetQuery(db, 'SELECT booklet_id FROM dxBooklets ORDER BY booklet_id;')$booklet_id
 updateSelectInput(session, 'add_booklet_name', choices = c('type or choose booklet_id' = '', booklets))
-output$data_import_result = renderUI({})
+runjs("Shiny.onInputChange('example_datasets',null);")
 covariates = setdiff(dbListFields(db, 'dxpersons'),'person_id')
 updateSelectInput(session,'prs_abl_plot_variable', choices = covariates)
 updateSelectInput(session,'prs_abl_plot_fill', choices = covariates)
+output$data_import_result = renderUI({})
+updateSlider(session, 'enorm_slider',list())
 lapply(names(default_reactive), function(nm){values[[nm]] = default_reactive[[nm]]})
 rules = get_rules(db)
 persons = get_persons(db) %>% mutate_if(is.masked.integer, as.integer)
@@ -82,7 +103,7 @@ arrange(.data$item_id, as.integer(.data$booklet_id))}
 values$ctt_items = tia$itemStats
 values$ctt_booklets = tia$testStats}
 set_js_vars(db, session)
-lapply(c('project_load_icon','oplm_inputs','abl_tables_plot_booklet', 'example_datasets'), hide)
+lapply(c('project_load_icon','oplm_inputs','example_datasets'), hide)
 show('proj_rules_frm')
 if.else(nrow(rules) > 0, show, hide)('proj_items_frm')
 if.else(nrow(persons) > 0, show, hide)('proj_persons_frm')
@@ -90,6 +111,7 @@ if.else(nrow(rules) > 0, enable_panes, disable_panes)('data_pane')
 if.else(nrow(persons) > 0, enable_panes, disable_panes)(c('ctt_pane', 'inter_pane','enorm_pane'))
 if.else(any(dbListFields(db,'dxItems') %in% c('item_screenshot','item_html','item_href')), 
 show, hide)('item-viewer-container')
+hide(selector="#enorm_tabs + div.tab-content > div.tab-pane > *:not(.well)")
 updateImgSelect(session, inputId = "abp_plotbar",choices=list())}
 if(is.null(db)){
 lapply(c('project_load_icon','proj_items_frm','proj_persons_frm','proj_rules_frm'), hide)
@@ -289,10 +311,10 @@ datatable(values$item_properties, container=sketch,
 selection = 'none', rownames = FALSE,  
 class='compact readable', 
 options = list(pageLength = 20, autoWidth = FALSE,
-scrollX = TRUE,
+scrollX = TRUE, 
 fixedColumns = list(leftColumns = 1),
 orderCellsTop = TRUE,
-initComplete = JS("draw_dt_footer")),
+initComplete = JS("function(s){draw_dt_footer(s);dt_add_column_btn(s)}")),
 extensions = 'FixedColumns')})   
 ip_proxy = dataTableProxy('item_properties')
 observeEvent(input$item_properties_user_update,{
@@ -302,6 +324,9 @@ upd[[colnames(values$item_properties)[indx]]] = input$item_properties_user_updat
 add_item_properties(db, upd)
 values$item_properties = get_items(db)
 values$update_item_properties = FALSE
+session$sendCustomMessage(type = 'update_footplot', 
+message=list(jqstring = paste0("#item_properties tfoot.dt-footer-plots td:nth-child(",indx,")"),
+html = toString(footplot_html(values$item_properties[[indx]]))))
 replaceData(ip_proxy, values$item_properties, rownames = FALSE, resetPaging = FALSE)})
 observeEvent(input$itemprop_file,{
 input_file = input$itemprop_file
@@ -320,6 +345,16 @@ reset('itemprop_file')
 set_js_vars(db, session)
 items = get_items(db)
 values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]})})
+observeEvent(input$item_properties_add_column,{
+req(input$item_properties_add_column)
+val = input$item_properties_add_column
+tc = switch(val$prop_type,integer = as.integer, double = as.double, as.character)
+dflt = list(tc(val$prop_dflt))
+names(dflt) = val$prop_name
+add_item_properties(db, default_values=dflt)
+items = get_items(db)
+values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
+set_js_vars(db, session)})
 output$new_itemcontents_preview = renderUI({
 req(db,input$itemcontents_file$datapath)
 nms = lapply(unzip(input$itemcontents_file$datapath, list=TRUE)$Name, basename)
@@ -376,6 +411,9 @@ upd = tibble(person_id = input$person_properties_user_update$row[[1]])
 upd[[colnames(values$person_properties)[indx]]] = input$person_properties_user_update$row[[indx]]
 add_person_properties(db, upd)
 values$person_properties = get_persons(db)
+session$sendCustomMessage(type = 'update_footplot', 
+message=list(jqstring = paste0("#person_properties tfoot.dt-footer-plots td:nth-child(",indx,")"),
+html = toString(footplot_html(values$person_properties[[indx]]))))
 values$update_person_properties = FALSE
 replaceData(pp_proxy, values$person_properties, rownames = FALSE, resetPaging = FALSE)})
 observeEvent(input$person_property_file,{
@@ -495,8 +533,8 @@ selected = 1
 isolate({
 if(!is.null(values$inter_booklet)){
 selected = min(which(values$ctt_booklets == values$inter_booklet))}})
-datatable({
-values$ctt_booklets }, rownames = FALSE, selection = list(mode = 'single', selected = selected), 
+datatable({ values$ctt_booklets}, 
+rownames = FALSE, selection = list(mode = 'single', selected = selected), 
 class='compact', extensions = 'Buttons',
 options = list(columnDefs = cdef, fnDrawCallback = drawcallback,
 buttons = dt_buttons('inter_booklets', title = '_ctt_booklets',
@@ -550,6 +588,19 @@ input$interslider_select %in% values$inter_plot_items)
 f = interaction_models$get(values$inter_booklet)
 plot(f, items = input$interslider_select, show.observed = input$inter_show_observed, 
 curtains = input$inter_curtains, summate = input$inter_summate,main='$item_id')})
+output$interslider_download = downloadHandler(
+filename = function(){
+paste0(values$inter_booklet, '_im_', input$interslider_select, '.png')},
+content = function(file){
+req(values$inter_booklet, values$inter_plot_items, input$interslider_select, 
+input$interslider_select %in% values$inter_plot_items) 
+f = interaction_models$get(values$inter_booklet)
+png(filename=file, type='cairo-png', width=960,height=640)
+plot(f, items = input$interslider_select, show.observed = input$inter_show_observed, 
+curtains = input$inter_curtains, summate = input$inter_summate,main='$item_id')
+dev.off()},
+contentType = "image/png"
+)
 output$ctt_items = renderDataTable({
 req(values$ctt_items)
 data = ctt_items_table(values$ctt_items, input$ctt_items_averaged)
@@ -586,20 +637,72 @@ content = function(file) {
 write.csv2(ctt_items_table(values$ctt_items, input$ctt_items_averaged), file, 
 row.names = FALSE, fileEncoding = "utf8")}
 )
-observe({
+observeEvent(input$ctt_itemprop,{
+req(input$ctt_itemprop, length(input$ctt_itemprop)>1)
+add_item_properties(db, as_tibble(input$ctt_itemprop))
+values$item_properties = get_items(db)})
+observeEvent(values$item_properties,{
+req(values$item_properties)
+if.else(ncol(values$item_properties)>1,show,hide)('ctt_itemprop-container') })
+observeEvent(values$item_properties,{
+req(values$item_properties, ncol(values$item_properties) > 1)
+fields = lapply(values$item_properties, function(col){
+list(type = if.else(is.numeric(col),'number', 'text'))})
+names(fields) = names(values$item_properties)
+fields$item_id$type = 'hidden'
+value = if.else(is.null(values$selected_ctt_item), NULL, 
+filter(values$item_properties,.data$item_id==values$selected_ctt_item$item_id))
+updateListInput(session,'ctt_itemprop',fields=fields,value=value)}, priority=1)
+observeEvent(values$selected_ctt_item,{
+req(values$selected_ctt_item)
+updateListInput(session,'ctt_itemprop',value=filter(values$item_properties,.data$item_id==values$selected_ctt_item$item_id))})
+observeEvent(input$ctt_items_rows_selected,{
 if(is.null(input$ctt_items_rows_selected)){ 
 values$selected_ctt_item = NULL} else{
 values$selected_ctt_item = ctt_items_table(values$ctt_items, input$ctt_items_averaged)[input$ctt_items_rows_selected,]}}) 
 output$ctt_selected_item = renderUI({if(!is.null(values$selected_ctt_item)) values$selected_ctt_item$item_id})
-output$ctt_plot = renderPlot({
-req(db, values$selected_ctt_item)
+output$ctt_plot = renderPlot({req(db, values$selected_ctt_item);distr_plot()})
+distr_plot = function(){
 ctt_item = values$selected_ctt_item
+item_id = pull(ctt_item, 'item_id')
 if('booklet_id' %in% names(ctt_item)){
 booklet = pull(ctt_item, booklet_id)
-distractor_plot(db, {booklet_id==booklet}, item = pull(ctt_item, 'item_id'),main='position $item_position in $booklet_id',sub=NULL,legend=FALSE)} else{
-rc = matrix_layout(dbGetQuery(db,'SELECT COUNT(*) AS n FROM dxBooklet_design WHERE item_id=:item_id;',
-select(ctt_item, .data$item_id))$n)
-distractor_plot(db, item = pull(ctt_item, 'item_id'), nr = rc[1], nc = rc[2], main='position $item_position in $booklet_id',sub=NULL,legend=FALSE)}})
+distractor_plot(db, {booklet_id==booklet}, item = item_id,main='position $item_position in $booklet_id',sub=NULL,legend=FALSE)} else{
+isolate({
+booklets = values$ctt_items %>% 
+filter(.data$item_id==!!item_id & .data$n>1)
+if(anyNA(booklets$rit)){
+suspected = filter(booklets, is.na(.data$rit))
+bk_no_variation = dbGetQuery(db,
+'WITH P1 AS 
+(SELECT booklet_id, person_id, SUM(item_score) AS bsc
+FROM dxResponses 
+INNER JOIN dxScoring_rules USING(item_id, response)
+WHERE booklet_id=:booklet_id
+GROUP BY booklet_id, person_id) 
+SELECT booklet_id FROM P1
+GROUP BY booklet_id HAVING MAX(bsc)=MIN(bsc);',
+select(suspected,.data$booklet_id))
+booklets = anti_join(booklets, bk_no_variation, by='booklet_id')}
+booklets = booklets$booklet_id})
+ly = matrix_layout(length(booklets)) 
+if(ncol(ly)<=3){
+main = 'item $item_position in $booklet_id'
+axes=TRUE} else{
+main = '$booklet_id'
+axes=FALSE
+par(mar=c(1,1,1,1))}
+layout(ly)
+distractor_plot(db, item = item_id, {booklet_id %in% booklets},main=main,sub=NULL,legend=FALSE,axes=axes)}}
+output$ctt_plot_download = downloadHandler(
+filename = function(){
+paste0('distr_',values$selected_ctt_item$item_id,'.png')},
+content = function(file){
+png(filename=file, type='cairo-png', width=960,height=640)
+distr_plot()
+dev.off()},
+contentType = "image/png"
+)
 output$item_viewer = renderUI({
 req(values$selected_ctt_item)
 item = dbGetQuery(db, 'SELECT * FROM dxItems WHERE item_id=:item_id;', list(item_id=values$selected_ctt_item$item_id)) %>%
@@ -730,21 +833,25 @@ if(trimws(input$enorm_predicate != '')){
 values$parms = eval(parse(text=paste0("fit_enorm(db, predicate={",input$enorm_predicate,"},method='",
 input$enorm_method,"')")))
 values$parms$xpr = input$enorm_predicate} else{
-values$parms = fit_enorm(db, method=input$enorm_method)}}
+values$parms = fit_enorm(db, method=input$enorm_method)}
+show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="enorm_items"] > *')
+isolate({
+values$update_enorm_plots = (input$enorm_tabs == 'enorm_items')})}
+observeEvent(input$enorm_tabs,{
+req(values$parms)
+if(input$enorm_tabs == 'enorm_items' && !values$update_enorm_plots)
+values$update_enorm_plots = TRUE})
 observeEvent(input$go_fit_enorm,{
 withBusyIndicatorServer("go_fit_enorm",{
 go_fit_enorm()})})
-observeEvent(input$enorm_coef_norm, { values$coef_format = 'norm'})
-observeEvent(input$enorm_coef_denorm, { values$coef_format = 'denorm'})
 observe({
-req(values$parms)
-if(values$parms$inputs$method=='Bayes'){
-hide('coef_denormalize')} else{
-show('coef_denormalize')}})
+if(is.null(values$parms) || values$parms$inputs$method=='Bayes' || n_distinct(values$parms$inputs$ssIS$item_score) <=2){
+hide('coef_format')} else{
+show('coef_format')}})
 enorm_coef_table = reactive({
-req(values$parms, values$coef_format)
+req(values$parms, input$coef_format)
 cf = coef(values$parms) 
-if(values$coef_format == "norm" || values$parms$inputs$method == 'Bayes'){
+if(input$coef_format == "norm" || values$parms$inputs$method == 'Bayes'){
 cf} else{
 cf %>%
 gather('var','val', 3:4 ) %>%
@@ -758,7 +865,7 @@ selected=1
 isolate({
 if(!is.null(values$enorm_item_selected)){
 selected = min(which(cf$item_id==values$enorm_item_selected))}})
-if(values$coef_format == "denorm" && values$parms$inputs$method == 'CML'){
+if(input$coef_format == "denorm" && values$parms$inputs$method == 'CML'){
 cdef_target = as.list(1:(ncol(cf)-1))
 sketch = tags$table(
 class='compact',
@@ -795,7 +902,7 @@ content = function(file) {
 write.csv2(enorm_coef_table(), file, row.names = FALSE, fileEncoding = "utf8")}
 )
 observe({
-req(values$parms, input$enorm_slider_nbins)
+req(values$parms, input$enorm_slider_nbins, values$update_enorm_plots)
 updateSlider(session, 'enorm_slider',
 lapply(sort(unique(coef(values$parms)$item_id)), function(item){
 outfile = tempfile(fileext = '.png')
@@ -805,13 +912,23 @@ plot(values$parms,item_id=item,nbins=input$enorm_slider_nbins,main='',bty='n',ax
 dev.off()
 par(op)
 list(src = outfile, contentType = 'image/png', choice_id = item)})
-)}, priority = 1)
+)})
 output$enorm_slider_plot = renderPlot({
-req(values$parms, input$enorm_slider_nbins,input$enorm_slider_select)
+req(values$parms, input$enorm_slider_nbins, input$enorm_slider_select)
 plot(values$parms, item_id=input$enorm_slider_select, nbins=input$enorm_slider_nbins)})
 observeEvent(input$enorm_coef_rows_selected,{
 updateSlider(session, 'enorm_slider',
 selected = enorm_coef_table()[input$enorm_coef_rows_selected,]$item_id)})
+output$enorm_slider_download = downloadHandler(
+filename = function(){
+paste0('enorm_',input$enorm_slider_select,'.png')},
+content = function(file){
+req(values$parms, input$enorm_slider_nbins, input$enorm_slider_select)
+png(filename=file, type='cairo-png', width=960,height=640)
+plot(values$parms, item_id=input$enorm_slider_select, nbins=input$enorm_slider_nbins)
+dev.off()},
+contentType = "image/png"
+)
 observe({
 input$ability_method
 input$ability_prior
@@ -846,7 +963,8 @@ values$person_abl = inner_join(abl, get_persons(db), by='person_id')
 values$abl_varinfo = lapply(select(values$person_abl, -.data$person_id, -.data$theta), function(col){
 tibble(type = typeof(col), n = n_distinct(col))}) %>% 
 bind_rows() %>%
-add_column(name = colnames(values$person_abl)[!(colnames(values$person_abl) %in% c('person_id','theta'))])})})
+add_column(name = colnames(values$person_abl)[!(colnames(values$person_abl) %in% c('person_id','theta'))])
+show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="ability"] > *')})})
 output$person_abilities = renderDataTable({
 if(!is.null(values$person_abl)){
 datatable( mutate_if(values$person_abl, is.double, round, digits = 3), 
@@ -878,7 +996,7 @@ selected = bkl} else{
 selected = intersect(bkl, isolate(input$abl_tables_plot_booklet))}
 updateSelectizeInput(session, 'abl_tables_plot_booklet', 
 choices = bkl, selected = selected)
-show('abl_tables_plot_booklet')})})
+show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="ability_tables"] > *')})})
 output$abl_tables = renderDataTable({
 if(!is.null(values$abl_tables)){
 mutate(values$abl_tables, theta = round(.data$theta,3), se = round(.data$se,3))}},rownames = FALSE, selection = 'none', class='compact',extensions = 'Buttons',
@@ -898,68 +1016,84 @@ filename = function(){paste0(gsub('\\.\\w+$','',basename(db@dbname), perl=TRUE),
 content = function(file) {
 write.csv2(values$person_abl, file, row.names = FALSE, fileEncoding = "utf8")}
 )
-abl_tbl_I_plot_data = reactive({
-req(values$abl_tables, input$abl_tables_plot_booklet)
-values$abl_tables %>%
-filter(is.finite(.data$theta)) %>%
-inner_join(tibble(booklet_id = input$abl_tables_plot_booklet), by='booklet_id') %>%
-mutate(I = 1/(.data$se**2))})
-output$abl_tables_plot_ti = renderPlot({
-abl = abl_tbl_I_plot_data()
-req(abl)
-bkl = unique(abl$booklet_id)
-colr = dexter:::qcolors(length(bkl))
-names(colr) = bkl
-ggplot(abl, aes_string(y='I',  x='theta', group='booklet_id', colour='booklet_id')) +
-geom_line() +
-labs(x=expression(theta), title = 'Test information function') +
-expand_limits(y = 0) +
-scale_color_manual(values=colr) +
-theme(panel.background = element_blank(),
-axis.line = element_line(colour = "black"),
-panel.grid.major = element_line(colour='gray88',size=0.2))})
+abl_tables_plot_booklet = reactive({input$abl_tables_plot_booklet}) %>% debounce(300)
+abl_tables_plot = reactive({
+req(values$abl_tables, abl_tables_plot_booklet())
+booklets = abl_tables_plot_booklet()
+abl = filter(values$abl_tables, is.finite(.data$theta)) %>%
+inner_join(tibble(booklet_id = booklets), by='booklet_id') 
+xmin = floor(min(abl$theta))
+xmax = ceiling(max(abl$theta))
+ymax = ceiling(1/(min(abl$se, na.rm=T)**2))
+colr = dexter:::qcolors(length(booklets))
+names(colr) = booklets
+scoretab = values$parms$inputs$bkList[abl_tables_plot_booklet()] %>%
+lapply(function(bk){ tibble(sumScore=0:(length(bk$scoretab)-1), n=bk$scoretab)} ) %>%
+bind_rows(.id = 'booklet_id')
+abl = abl %>%
+inner_join(scoretab, by=c('booklet_id','sumScore'))
+offs = (xmax-xmin)/62
+mids = seq(xmin+offs,xmax-offs,length.out=30)
+hist_counts = abl %>%
+group_by(.data$theta) %>%
+mutate(x = which.min(abs(mids - .data$theta[1]))) %>%
+ungroup() %>%
+group_by(.data$x) %>%
+summarize(y = sum(.data$n)) %>%
+ungroup() %>%
+right_join(tibble(x=1:31), by='x') %>%
+mutate(y = coalesce(.data$y,0L)) %>%
+arrange(.data$x)
+par(mar = c(5,4,3,4))
+barplot(hist_counts$y, axes=FALSE,space=0, ylim=c(0,max(hist_counts$y)*2))
+axis(side=4 ) 
+par(new=TRUE)
+plot(type='n',x=c(xmin,xmax),y=c(0,ymax),xlab=expression(theta), ylab='Information',bty='l')
+for(bkl in booklets){
+plot(information(values$parms, booklet=bkl), 
+from = xmin, to = xmax, add=TRUE,col = colr[bkl])}
+mtext("n persons", side=4, line=2.5)})
+output$abl_tables_plot_ti = renderPlot({abl_tables_plot()})
+output$abl_tables_plot_ti_download = downloadHandler(
+filename = 'test_information.png',
+content = function(file){
+png(filename=file, type='cairo-png', width=960,height=640)
+abl_tables_plot()
+dev.off()},
+contentType = "image/png"
+)
 output$abl_tables_plot_ti_hinf = renderUI({
-abl = abl_tbl_I_plot_data()
-req(abl, input$abl_tables_plot_ti_hov)
-bkl = unique(abl$booklet_id)
+req(values$abl_tables, input$abl_tables_plot_ti_hov)
+abl = values$abl_tables
+bkl = abl_tables_plot_booklet()
 colr = dexter:::qcolors(length(bkl))
 names(colr) = bkl
 hover = input$abl_tables_plot_ti_hov
-point = nearPoints(abl, hover, 
-xvar='theta',yvar='I',
-threshold = 5, maxpoints = 1, addDist = TRUE)
-if (nrow(point) == 0) return(NULL)
+theta = hover$x
+bky = sapply(bkl, function(bk){information(values$parms,booklet=bk)(theta)})
+req(min(abs(bky-hover$y)) < hover$domain$top/12 )
+booklet_id = bkl[which.min(abs(bky-hover$y))]
 left_pct = (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
 top_pct = (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
 left_px = hover$range$left + left_pct * (hover$range$right - hover$range$left)
 top_px = hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
+if(left_pct > .5){
+trnsp = "transform:translateY(-100%);"
+left_px = left_px + 5} else{
+left_px = left_px - 5
+trnsp = "transform:translate(-100%,-100%);"}
 style = paste0("position:absolute; z-index:100; background-color: rgba(255, 255, 255, 0.85); ",
-"left:", left_px + 5, "px; top:", top_px + 2, "px;padding:5px;",
-"border: 1px solid ", colr[point$booklet_id], "; border-radius:2px;")
-tags$div(point$booklet_id, style=style)})
-output$abl_tables_plot_stf = renderPlot({
-req(values$abl_tables, input$abl_tables_plot_booklet)
-abl = values$abl_tables %>%
-filter(is.finite(.data$theta)) %>%
-inner_join(tibble(booklet_id = input$abl_tables_plot_booklet), by='booklet_id') 
-ggplot(abl, aes_string(y='sumScore',  x='theta', group='booklet_id', colour='booklet_id')) +
-geom_line() +
-labs(x=expression(theta), title = 'Score transformation') +
-expand_limits(y = 0) +
-scale_y_continuous(expand = c(0, 0)) +
-theme(panel.background = element_blank(),
-axis.line = element_line(colour = "black"),
-panel.grid.major = element_line(colour='gray88',size=0.2))})
+"left:", left_px, "px; top:", (top_px-5), "px;padding:5px;",
+trnsp,
+"border: 1px solid ", colr[booklet_id], "; border-radius:2px;")
+tags$div(booklet_id, style=style)})
 get_var_info = function(var_info, what = c('nominal','ordinal','continuous'), most_interesting_as_first=TRUE){
 what = match.arg(what)
 vi = var_info %>% mutate(fun_indx = case_when(.data$n==1 ~ -2, .data$name=='sumScore' ~ -1, .data$name=='booklet_id' ~ 0,TRUE ~ 1))
 if(what=='nominal'){
-filter(vi, .data$n <= 40)  %>% arrange(desc(.data$fun_indx), .data$n)} else if(what=='ordinal'){
+filter(vi, .data$n <= 40 & .data$name != 'sumScore')  %>% arrange(desc(.data$fun_indx), .data$n)} else if(what=='ordinal'){
 filter(vi,  .data$n > 1 & .data$type %in% c('integer','double')) %>% arrange(desc(.data$fun_indx), .data$n)} else{
 filter(vi, .data$n > 5 & .data$type %in% c('integer','double'))  %>% arrange(desc(.data$fun_indx),desc(.data$n))}}
-observeEvent(input$abp_btn_stacked, {values$abp_stack_facet = "stacked"})
-observeEvent(input$abp_btn_facetted, {values$abp_stack_facet = "facetted"})
-observeEvent(input$abp_btn_joy, {values$abp_stack_facet = "joy"})
 plottypes <- tibble(plot = c("hist", "box", "ecdf", "dens", "bar", "box", "line", "scat"), 
 type = c("nominal", "nominal", "nominal", "nominal", "nominal", "nominal", "ordinal", "continuous"),
 aim = c("dist", "dist", "dist", "dist", "comp", "comp", "comp", "rel"),
@@ -1019,7 +1153,7 @@ comp = list(label = 'Comparison'),
 rel = list(label = 'Relationships'))
 choices[[2]]$group = c('distr', 'comp')
 updateImgSelect(session, choices = choices, inputId = "abp_plotbar", group_options = group_options, selected = "hist")})
-observeEvent({input$abp_plotbar; values$abl_varinfo},{
+observe({
 if(is.null(values$abl_varinfo)){
 hide(selector=paste0('#abp_group,#abp_main,#abp_xlab,#abp_ylab,#abp_grid,#abp_bins,#abp_fill,',
 '#abp_linetype,#abp_fitlines,#abp_xvar,#abp_color,#abp_stackfacet,#abp_trans'))} else if(!(is.null(input$abp_plotbar$value))){
@@ -1094,13 +1228,13 @@ switch(input$abp_plotbar$value,
 hist = {
 if (input$abp_group == "none"){
 p <- ggplot(values$person_abl, aes_string("theta")) + 
-geom_histogram(fill = input$abp_color, alpha = input$abp_trans, bins = input$abp_bins,na.rm=TRUE)} else if (input$abp_group != "none" && values$abp_stack_facet != "joy") {
+geom_histogram(fill = input$abp_color, alpha = input$abp_trans, bins = input$abp_bins,na.rm=TRUE)} else if (input$abp_group != "none" && input$abp_stackfacet != "joy") {
 p <- ggplot(values$person_abl %>% mutate(!!input$abp_group := as.factor(.data[[input$abp_group]])), 
 aes_string("theta", fill = input$abp_group)) + 
 geom_histogram(alpha = input$abp_trans, bins = input$abp_bins,na.rm=TRUE)
-if (values$abp_stack_facet == 'facetted') {
+if (input$abp_stackfacet == 'facetted') {
 p <- p + 
-facet_grid(reformulate(input$abp_group, "."))}} else if (input$abp_group != "none" && values$abp_stack_facet == "joy") {
+facet_grid(reformulate(input$abp_group, "."))}} else if (input$abp_group != "none" && input$abp_stackfacet == "joy") {
 p <- ggplot(values$person_abl %>% mutate(!!input$abp_group := as.factor(.data[[input$abp_group]])), 
 aes_string(x = "theta", 
 y = input$abp_group, 
@@ -1134,15 +1268,15 @@ if(input$abp_group == "none"){
 p <- ggplot(values$person_abl, aes_string("theta"))} else{
 p <- ggplot(values$person_abl %>% mutate(!!input$abp_group := as.factor(.data[[input$abp_group]])),
 aes_string("theta"))}
-if (input$abp_group != "none" && values$abp_stack_facet != "joy") {
+if (input$abp_group != "none" && input$abp_stackfacet != "joy") {
 p <- p + geom_density(aes_string(group = input$abp_group, 
 colour = input$abp_group),
 alpha = input$abp_trans,na.rm=TRUE)
-if (values$abp_stack_facet == 'facetted') {
+if (input$abp_stackfacet == 'facetted') {
 p <- p + 
 facet_grid(reformulate(input$abp_group, "."))}
 if (input$abp_fill == TRUE) {
-p <- p + aes_string(fill = input$abp_group)}} else if (input$abp_group != "none" && values$abp_stack_facet == "joy") {
+p <- p + aes_string(fill = input$abp_group)}} else if (input$abp_group != "none" && input$abp_stackfacet == "joy") {
 p <- ggplot(filter(values$person_abl, is.finite(.data$theta)), aes_string(x = "theta", 
 y = input$abp_group, 
 group = input$abp_group)) +
@@ -1214,6 +1348,277 @@ legend.title = element_text(size = 8),
 legend.key.size = unit(0.4,"cm"))
 ggsave(file, plot = plt, device = "png", units = 'cm', 
 width = input$abp_download_width, height = input$abp_download_height,
+dpi = 600)},
+contentType = "image/png"
+)
+observeEvent(input$go_plausible_values, {
+withBusyIndicatorServer("go_plausible_values",{
+if(is.null(values$parms)) 
+go_fit_enorm()
+if(!(is.null(input$plausible_values_predicate) || trimws(input$plausible_values_predicate) == '')){
+pv = eval(parse(text=paste0("plausible_values(db, parms=values$parms, nPV = input$plausible_values_nPV,",
+"predicate={",input$plausible_values_predicate,"})")))} else{
+pv = plausible_values(db, parms=values$parms, nPV = input$plausible_values_nPV)}
+values$plausible_values = inner_join(pv, get_persons(db), by='person_id')
+values$pvp_varinfo = lapply(select(values$plausible_values, -.data$person_id, 
+-grep("PV", names(values$plausible_values))), function(col){
+tibble(type = typeof(col), n = n_distinct(col))}) %>% 
+bind_rows(.id='name')
+show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="plausible_values"] > *')})})
+plottypes <- tibble(plot = c("hist", "box", "ecdf", "dens", "bar", "box", "line", "scat"), 
+type = c("nominal", "nominal", "nominal", "nominal", "nominal", "nominal", "ordinal", "continuous"),
+aim = c("dist", "dist", "dist", "dist", "comp", "comp", "comp", "rel"),
+message = c(rep("grouping", 7), "covariate"))
+observeEvent(values$plausible_values,{
+req(values$plausible_values)
+var_info = values$pvp_varinfo
+firstnominal <- get_var_info(var_info,'nominal') %>% slice(1)
+firstordinal <- get_var_info(var_info,'ordinal') %>% slice(1)
+firstcontinuous <- get_var_info(var_info,'continuous') %>% slice(1)
+if(nrow(firstordinal) == 0) plottypes <- filter(plottypes, .data$type != "ordinal")
+if(nrow(firstcontinuous) == 0) plottypes <- filter(plottypes, .data$type != "continuous")
+updateSelectInput(session, inputId = "pvp_xvar",
+choices = filter(var_info, .data$type %in% c('integer','double'))$name,
+selected = firstcontinuous$name)
+choices <- lapply(unique(plottypes$plot), function(id){
+outfile <- tempfile(fileext = '.png')
+if (id == "hist"){
+p <- ggplot(values$plausible_values, aes_string("PV1", group = firstnominal$name, fill = firstnominal$name)) +
+geom_histogram(alpha = 0.5,na.rm=TRUE, bins=30) + 
+theme(legend.position = "none") + 
+theme_nothing()} 
+else if (id == "box") {
+p <- ggplot(values$plausible_values, aes_string(x = firstnominal$name, y = "PV1", colour = firstnominal$name)) +
+geom_boxplot(na.rm=TRUE) +
+theme(legend.position = "none") + 
+theme_nothing()} 
+else if (id == "ecdf") {
+p <- ggplot(values$plausible_values, aes_string("PV1", colour = firstnominal$name)) +
+stat_ecdf(na.rm=TRUE) + 
+theme_nothing()} 
+else if (id == "dens") {
+p <- ggplot(values$plausible_values, aes_string("PV1")) +
+geom_density(aes_string(group = firstnominal$name, colour = firstnominal$name),na.rm=TRUE) + 
+theme_nothing()} 
+else if (id == "bar") {
+p <- ggplot(values$plausible_values, aes_string(firstnominal$name, "PV1", fill = firstnominal$name)) +
+geom_bar(stat = "summary", fun.y = "mean",na.rm=TRUE) +
+theme(legend.position = "none") + 
+theme_nothing()} 
+else if (id == "line") {
+p <- ggplot(values$plausible_values, aes_string(firstordinal$name, "PV1", fill = firstnominal$name, colour = firstnominal$name)) +
+geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) + 
+theme_nothing()} 
+else if (id == "scat") {
+p <- ggplot(values$plausible_values, aes_string(firstcontinuous$name, "PV1", colour = firstnominal$name)) + 
+geom_point(na.rm=TRUE) + 
+theme_nothing()}
+ggsave(outfile, p, width = 1, height = 1)
+list(src = outfile,
+contentType = 'image/png',
+choice_id = id,
+group = ifelse(id %in% c("hist", "box", "ecdf", "dens"), 'distr', 
+ifelse(id %in% c("bar", "line"), 'comp', 'rel')))})
+group_options <- list(distr = list(label = 'Distribution'),
+comp = list(label = 'Comparison'),
+rel = list(label = 'Relationships'))
+choices[[2]]$group = c('distr', 'comp')
+updateImgSelect(session, choices = choices, inputId = "pvp_plotbar", group_options = group_options, selected = "hist")})
+observe({
+if(is.null(values$pvp_varinfo)){
+hide(selector=paste0('#pvp_group,#pvp_main,#pvp_xlab,#pvp_ylab,#pvp_grid,#pvp_bins,#pvp_fill,',
+'#pvp_linetype,#pvp_fitlines,#pvp_xvar,#pvp_color,#pvp_stackfacet,#pvp_trans'))} else if(!(is.null(input$pvp_plotbar$value))){
+var_info = values$pvp_varinfo
+nominal_var <- get_var_info(var_info,'nominal') 
+ordinal_var <- get_var_info(var_info,'ordinal') 
+continuous_var <- get_var_info(var_info,'continuous') 
+firstnominal <-  nominal_var %>% slice(1)
+firstordinal <-  ordinal_var %>% slice(1)
+firstcontinuous <-  continuous_var %>% slice(1)
+if(nrow(firstordinal) == 0) plottypes <- filter(plottypes, .data$type != "ordinal")
+if(nrow(firstcontinuous) == 0) plottypes <- filter(plottypes, .data$type != "continuous")
+currentgroup <- input$pvp_group
+if (currentgroup %in% pull(nominal_var, 'name')) {
+barboxgroup <- input$pvp_group} else {barboxgroup <- firstnominal$name}
+if (input$pvp_plotbar$value %in% c("hist", "dens", "ecdf", "line", "scat")) {
+updateSelectInput(session, 
+inputId = "pvp_group", 
+choices = c("none", pull(nominal_var, 'name')),
+selected = currentgroup)} else if (input$pvp_plotbar$value %in% c("box", "bar")) {
+updateSelectInput(session,
+inputId = "pvp_group",
+choices = pull(nominal_var, 'name'),
+selected = barboxgroup)}
+if (input$pvp_plotbar$value == "scat"){
+updateSelectInput(session,
+inputId = "pvp_xvar",
+choices = pull(continuous_var, 'name'),
+selected = input$pvp_xvar)} else if (input$pvp_plotbar$value == "line"){
+updateSelectInput(session,
+inputId = "pvp_xvar",
+choices = pull(ordinal_var, 'name'),
+selected = input$pvp_xvar)}
+show(id = "pvp_group")
+show(id = "pvp_main")
+show(id = "pvp_xlab")
+show(id = "pvp_ylab")
+show(id = "pvp_grid")
+if (input$pvp_plotbar$value == "hist") {show(id = "pvp_bins")} else {hide(id = "pvp_bins")}
+if (input$pvp_plotbar$value %in% c("box", "dens")) {show(id = "pvp_fill")} else hide(id = "pvp_fill")
+if (input$pvp_plotbar$value == "line") {show(id = "pvp_linetype")} else {hide(id = "pvp_linetype")}
+if (input$pvp_plotbar$value == "scat") {show(id = "pvp_fitlines")} else {hide(id = "pvp_fitlines")}
+if (input$pvp_plotbar$value %in% c("line", "scat")) {show(id = "pvp_xvar")} else {hide(id = "pvp_xvar")}
+if (input$pvp_group %in% pull(nominal_var, 'name') &&
+input$pvp_plotbar$value %in% c("hist", "dens")) {
+show(id = "pvp_stackfacet")} else {hide(id = "pvp_stackfacet")}
+if (input$pvp_plotbar$value %in% c("hist", "ecdf", "dens", "line", "scat") & input$pvp_group == "none") {show(id = "pvp_color")} 
+else {hide(id = "pvp_color")}
+if (input$pvp_fill == TRUE && input$pvp_plotbar$value %in% c("hist", "box", "dens", "bar")) {
+show(id = "pvp_trans")} else { hide(id = "pvp_trans") }}})
+observe({
+req(values$pvp_varinfo, input$pvp_plotbar$value)
+if(input$pvp_plotbar$value %in% c('scat','line')){
+var_info = values$pvp_varinfo
+ordinal_var = filter(var_info,  .data$n > 1 & .data$type %in% c('integer','double'))
+continuous_var = filter(var_info, .data$type %in% c('integer','double'))
+if(input$pvp_plotbar$value == 'line'){
+selected = if.else(input$pvp_group == isolate(input$pvp_xvar), NULL, isolate(input$pvp_xvar))
+updateSelectInput(session,
+inputId = "pvp_xvar",
+choices = setdiff(pull(ordinal_var, 'name'), input$pvp_group),
+selected = selected)} else if(input$pvp_plotbar$value == 'scat'){
+selected = if.else(input$pvp_group == isolate(input$pvp_xvar), NULL, isolate(input$pvp_xvar))
+updateSelectInput(session,
+inputId = "pvp_xvar",
+choices = setdiff(pull(continuous_var, 'name'),input$pvp_group),
+selected = selected)}}}, priority=1)
+pvplot = reactive({
+req(input$pvp_plotbar$value, values$plausible_values, 
+!((input$pvp_xvar == '' || input$pvp_xvar == input$pvp_group) && input$pvp_plotbar$value %in% c('scat','line')))
+switch(input$pvp_plotbar$value,
+hist = {
+if (input$pvp_group == "none"){
+p <- ggplot(values$plausible_values, aes_string("PV1")) + 
+geom_histogram(fill = input$pvp_color, alpha = input$pvp_trans, bins = input$pvp_bins,na.rm=TRUE)} else if (input$pvp_group != "none" && input$pvp_stackfacet != "joy") {
+p <- ggplot(values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]])), 
+aes_string("PV1", fill = input$pvp_group)) + 
+geom_histogram(alpha = input$pvp_trans, bins = input$pvp_bins,na.rm=TRUE)
+if (input$pvp_stackfacet == 'facetted') {
+p <- p + 
+facet_grid(reformulate(input$pvp_group, "."))}} else if (input$pvp_group != "none" && input$pvp_stackfacet == "joy") {
+p <- ggplot(values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]])), 
+aes_string(x = "PV1", 
+y = input$pvp_group, 
+group = input$pvp_group, 
+fill = input$pvp_group)) +
+geom_density_ridges2(stat = "binline", bins = input$pvp_bins,
+show.legend = FALSE, alpha = input$pvp_trans,
+na.rm=TRUE)}
+p <- p + 
+theme(legend.position = "none") +
+theme_minimal()},
+box = {
+p <- ggplot(values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]])), 
+aes_string(x = input$pvp_group, y = "PV1", 
+colour = input$pvp_group)) +
+geom_boxplot(alpha = input$pvp_trans, show.legend = FALSE, na.rm=TRUE) +
+theme_minimal()
+if (input$pvp_fill == TRUE){
+p <- p + aes_string(fill = input$pvp_group)}},
+ecdf = {
+if (input$pvp_group != "none"){
+p <- ggplot(values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]])), 
+aes_string("PV1", color = input$pvp_group)) +
+stat_ecdf(na.rm=TRUE)} else if (input$pvp_group == "none"){
+p <- ggplot(values$plausible_values, aes_string("PV1")) +
+stat_ecdf(color = input$pvp_color,na.rm=TRUE)}
+p <- p + 
+theme_minimal()},
+dens = {
+if(input$pvp_group == "none"){
+p <- ggplot(values$plausible_values, aes_string("PV1"))} else{
+p <- ggplot(values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]])),
+aes_string("PV1"))}
+if (input$pvp_group != "none" && input$pvp_stackfacet != "joy") {
+p <- p + geom_density(aes_string(group = input$pvp_group, 
+colour = input$pvp_group),
+alpha = input$pvp_trans,na.rm=TRUE)
+if (input$pvp_stackfacet == 'facetted') {
+p <- p + 
+facet_grid(reformulate(input$pvp_group, "."))}
+if (input$pvp_fill == TRUE) {
+p <- p + aes_string(fill = input$pvp_group)}} else if (input$pvp_group != "none" && input$pvp_stackfacet == "joy") {
+p <- ggplot(filter(values$plausible_values, is.finite(.data$PV1)), aes_string(x = "PV1", 
+y = input$pvp_group, 
+group = input$pvp_group)) +
+geom_density_ridges2(show.legend = FALSE, alpha = input$pvp_trans,na.rm=TRUE)
+if (input$pvp_fill == TRUE) {
+p <- p + aes_string(fill = input$pvp_group)}} else if (input$pvp_group == "none" && input$pvp_fill == TRUE) {
+p <- p + geom_density(color = input$pvp_color, 
+fill = input$pvp_color,
+alpha = input$pvp_trans,na.rm=TRUE)} else if (input$pvp_group == "none" && input$pvp_fill == FALSE) {
+p <- p + geom_density(color = input$pvp_color,
+alpha = input$pvp_trans,na.rm=TRUE)}
+p <- p + theme_minimal()},
+bar = {
+updateCheckboxInput(session, "pvp_fill", value = TRUE)
+p <- ggplot(values$plausible_values, aes_string(input$pvp_group, "PV1")) +
+geom_bar(stat = "summary", fun.y = "mean", 
+show.legend = FALSE,
+alpha = input$pvp_trans,
+na.rm=TRUE) +
+aes_string(fill = input$pvp_group) +
+theme_minimal()},
+line = {
+if (input$pvp_group == "none"){
+hide(id = "pvp_linetype")} else {show(id = "pvp_linetype")}
+p <- ggplot(if.else(input$pvp_group == 'none',
+values$plausible_values,
+values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]]))),
+aes_string(input$pvp_xvar, "PV1")) +
+theme_minimal()
+if (input$pvp_group == "none"){
+p <- p + geom_line(stat = "summary", fun.y = "mean", colour = input$pvp_color, na.rm=TRUE)} else if (input$pvp_group != "none"){
+p <- p + geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) +
+aes_string(fill = input$pvp_group, colour = input$pvp_group)
+if (input$pvp_linetype == TRUE) {
+p <- p + aes_string(linetype = input$pvp_group)}}},
+scat = {
+p <- ggplot(if.else(input$pvp_group == 'none',
+values$plausible_values,
+values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]]))),
+aes_string(input$pvp_xvar, "PV1")) + 
+theme_minimal()
+if (input$pvp_group == "none"){
+p <- p + 
+geom_point(color = input$pvp_color,na.rm=TRUE)} else if (input$pvp_group != "none"){
+p <- p + 
+geom_point(na.rm=TRUE) +
+aes_string(colour = input$pvp_group)}
+if (input$pvp_fitlines == TRUE){
+p <- p + geom_smooth() }}
+)
+if (input$pvp_xlab != "") {p <- p + xlab(input$pvp_xlab)}
+if (input$pvp_ylab != "") {p <- p + ylab(input$pvp_ylab)}
+if (input$pvp_main != "") {p <- p + ggtitle(rstr_eval(input$pvp_main,values$plausible_values)) +
+theme(plot.title = element_text(size = 20,
+hjust = 0.5))}
+if (input$pvp_grid == FALSE){
+p <- p + theme(panel.grid.major = element_blank(), 
+panel.grid.minor = element_blank())}
+p})
+output$pvp_plot = renderPlot({pvplot()})
+output$pvp_download = downloadHandler(
+filename = function(){paste0(gsub('\\.\\w+$','',basename(db@dbname), perl=TRUE),'_plausiblevalues.png')},
+content = function(file) {
+png()
+plt = pvplot() +  theme(axis.text = element_text(size = 8),
+axis.title = element_text(size = 8),
+legend.text = element_text(size = 8),
+legend.title = element_text(size = 8),
+legend.key.size = unit(0.4,"cm"))
+ggsave(file, plot = plt, device = "png", units = 'cm', 
+width = input$pvp_download_width, height = input$pvp_download_height,
 dpi = 600)},
 contentType = "image/png"
 )}

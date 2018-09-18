@@ -81,14 +81,12 @@ delayed_list = setRefClass('delayed_list',
 
 # returns c(nrow,ncol) based on npic to minimise whitespace in faceted plot display
 # based on the assumption of slightly more available width than height
-matrix_layout = Vectorize(
-  function(npic){
-    if(npic == 1) return(c(1,1))
-    if(npic == 2) return(c(1,2))
-    if(npic <= 4) return(c(2,2))
-    if(npic <= 6) return(c(2,3))
-    return(c(3,3))
-  })
+matrix_layout = function(npic){
+  rw = round(sqrt(npic))
+  cl = ceiling(npic/rw)
+  matrix(1:(rw*cl),rw,cl,byrow=TRUE)
+}
+
 
 
 # is incidence matrix connected
@@ -308,4 +306,8 @@ readSCR = function (file)
        responses_start = fmt[3], response_length = fmt[5],
        expanded = expanded)
 }
+
+
+
+
 

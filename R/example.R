@@ -101,9 +101,10 @@ example_db = function(name)
     
     raw = raw %>%
       rename(person_id = 'idstud') %>%
-      arrange(.data$person_id, .data$item_id) %>%
+      mutate(inum = dense_rank(.data$item_id)) %>%
+      arrange(.data$person_id, .data$inum) %>%
       group_by(.data$person_id) %>%
-      mutate(booklet_id=paste(.data$item_id,collapse=' ')) %>%
+      mutate(booklet_id=paste(.data$inum,collapse=' ')) %>%
       ungroup() %>%
       mutate(booklet_id=paste('booklet', dense_rank(.data$booklet_id))) %>%
       group_by(.data$booklet_id) %>%
@@ -124,6 +125,16 @@ example_db = function(name)
     db = start_new_project(rules, ':memory:', person_properties=list(age = as.double(NA)))
     
     add_booklet(db, ev$SF12 %>% mutate(age=round(.data$age,1)), 'Sf12')
+    
+    add_item_properties(db,tibble(
+      item_id=paste0('Y',1:12),
+      item_content = c('general health','limits in moderate activities','limits in climbing several flights of stairs','accomplished less than he/she would like, as a result of his/her physical health',
+                       'limited in the kind of work or daily activities, as a result of his/her physical health','accomplished less than he/she would like, as a result of his/her emotional health',
+                       'did work less carefully than usual, as a result of his/her emotional health','how much did pain interfere with normal work',
+                       'how much of the time have he/she felt calm and peaceful','how much of the time did he/she have a lot of energy',
+                       'how much of the time have he/she felt downhearted and depressed','how much of the time physical health or emotional health interfered with social activities')
+    ))
+    
   } else if(name=='RLMS')
   {
     ev = new_environment()
@@ -138,8 +149,9 @@ example_db = function(name)
                                                   marital=as.integer(NA), gender=as.integer(NA),
                                                   work=as.integer(NA)))
     
-    add_booklet(db, ev$RLMS, 'Sf12')
-  }
+    add_booklet(db, ev$RLMS, 'Rlms')
+    
+  } 
 
   
   db
