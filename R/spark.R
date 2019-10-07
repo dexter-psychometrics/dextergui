@@ -24,8 +24,8 @@ sparkhist_vals = function(x, nbar = 10, .min = min(x,na.rm=TRUE), .max = max(x,n
     list(values=paste0('[',paste0(h$counts,collapse=','),']'),
          labels=paste0('[',paste0(round(h$mids,1),collapse=','),']'),
          labels_extended = paste0('[',
-                              paste0('"',round(h$breaks[1:(length(h$counts)-1)],1),':', 
-                                  round(lead(h$breaks)[1:(length(h$counts)-1)],1),'"',
+                              paste0('"',ceiling(h$breaks[1:(length(h$breaks)-1)]),'-', 
+                                  floor(lead(h$breaks)[1:(length(h$breaks)-1)]),'"',
                                   collapse=','),']'))
   }
 }
@@ -66,7 +66,7 @@ init_sparks = function(.box = list(), .hist = list(), add_js='')
 footplot_html = function(col)
 {
 
-  if(is.masked.integer(col)) col = as.integer(col)
+  if(is_integer_(col)) col = as.integer(col)
   
   if(inherits(col,'character') || (is.integer(col) && n_distinct(col)<=6))
   {
@@ -85,19 +85,24 @@ footplot_html = function(col)
       }
       mx = sum(vt$n)
       
-      return(tags$td(do.call(tags$div,
-                                 apply(vt,1,function(r){
-                                   tags$div(r[1], title=paste(round(100*as.integer(r[2])/mx),'%'),
-                                            tags$div(style=paste0('width:',100*as.integer(r[2])/mx,'%;')))}))))  
+      args = 
+        apply(vt,1,function(r){
+          tags$div(r[1], title=paste(round(100*as.integer(r[2])/mx),'%'),
+                   tags$div(style=paste0('width:',100*as.integer(r[2])/mx,'%;')))})
+      args$style='display:none;'
+      
+      return(tags$td(do.call(tags$div,args)))  
 
     } 
   } else if(is.integer(col))
   {
+    col = col[is.finite(col)]
     sprk = sparkhist_vals(col,as.what='data')
     return(tags$td(tags$div(tags$div(class='sparkhist', `data-min`=min(col),`data-max`=max(col),
                                           `data-values`=sprk$values,
                                           `data-labels`=sprk$labels,
-                                          `data-labels_ext`=sprk$labels_extended)),style='vertical-align:bottom;'))
+                                          `data-labels_ext`=sprk$labels_extended)),
+                   style='vertical-align:bottom;'))
 
   } else if(is.numeric(col))
   {

@@ -5,7 +5,8 @@ import(shiny, except = c('renderDataTable', 'dataTableOutput'))
 importFrom(shinyBS, 'bsTooltip')
 importFrom(shinyjs, 'useShinyjs', 'runjs', 'show', 'hide', 'hidden','reset')
 importFrom(DT, 'renderDataTable', 'dataTableOutput', 'JS', 'datatable', 'tableHeader', 'tableFooter', 'dataTableProxy', 'replaceData')
-importFrom(shinyFiles, 'parseSavePath', 'parseFilePaths', 'shinySaveButton', 'shinyFilesButton', 'shinyFileChoose', 'shinyFileSave')
+importFrom(shinyFiles, 'parseSavePath', 'parseFilePaths', 'shinySaveButton', 
+                        'shinyFilesButton', 'shinyFileChoose', 'shinyFileSave', 'getVolumes')
 importFrom(htmltools, 'tagAppendAttributes', 'attachDependencies', 'htmlEscape','tagGetAttribute')
 importFrom(htmlwidgets, 'getDependency')
 importFrom(jsonlite, 'toJSON', 'unbox')
@@ -29,11 +30,9 @@ importFrom(tools, 'file_ext')
 import(ggplot2)
 importFrom(ggridges, 'geom_density_ridges2')
 importFrom(ggExtra, 'ggMarginal')
-importFrom(igraph, 'cluster_walktrap', 'graph_from_incidence_matrix',
-           'membership', 'graph_from_adjacency_matrix')
 importFrom(networkD3, 'forceNetworkOutput', 'igraph_to_networkD3', 'forceNetwork', 'renderForceNetwork')
 importFrom(Cairo, 'Cairo')
-import(RColorBrewer)
+#import(RColorBrewer)
 
 export(dextergui)
 

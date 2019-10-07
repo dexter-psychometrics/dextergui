@@ -16,23 +16,24 @@ example_datasets_ui = function(...)
   
   out = list()
 
-  out$verbAggr = card('dexter',getHelpList('verbAggrData','dexter'), 'verbAggr')
+  out$verbAggr = card('dexter', getHelpList('verbAggrData','dexter'), 'verbAggr')
   
   if (requireNamespace("psych", quietly = TRUE))
-    out$blot = card('psych',getHelpList('blot','psych'), 'blot')
+    try({out$blot = card('psych',getHelpList('blot','psych'), 'blot')}, silent=TRUE)
 
   if (requireNamespace("sirt", quietly = TRUE))
   {
-    out$bs07a = card('sirt',getHelpList('data.bs07a','sirt'), 'bs07a')
-    out$math = card('sirt',getHelpList('data.math','sirt'), 'math')
-    out$timss = card('sirt',getHelpList('data.timss07.G8.RUS','sirt'), 'timss')
+    try({out$bs07a = card('sirt',getHelpList('data.bs07a','sirt'), 'bs07a')}, silent=TRUE)
+    try({out$math = card('sirt',getHelpList('data.math','sirt'), 'math')}, silent=TRUE)
+    try({out$timss = card('sirt',getHelpList('data.timss07.G8.RUS','sirt'), 'timss')}, silent=TRUE)
   }
-
+  
   if (requireNamespace("MLCIRTwithin", quietly = TRUE))
   {
-    out$sf12 = card("MLCIRTwithin",getHelpList('SF12','MLCIRTwithin'), 'SF12')
-    out$rlms = card("MLCIRTwithin",getHelpList('RLMS','MLCIRTwithin'), 'RLMS')
+    try({out$sf12 = card("MLCIRTwithin",getHelpList('SF12','MLCIRTwithin'), 'SF12')}, silent=TRUE)
+    try({out$rlms = card("MLCIRTwithin",getHelpList('RLMS','MLCIRTwithin'), 'RLMS')}, silent=TRUE)
   }
+ 
   tags$div(do.call(tagList, out), tags$hr(), ...)
 }
 
@@ -52,7 +53,7 @@ example_db = function(name)
     add_booklet(db, ev$blot, 'blot')
   } else if(name=='verbAggr')
   {
-    db=start_new_project(dexter::verbAggrRules, ':memory:', person_properties=list(gender='<NA>',anger=as.integer(NA)))
+    db = start_new_project(dexter::verbAggrRules, ':memory:', person_properties=list(gender='<NA>',anger=as.integer(NA)))
     add_booklet(db, dexter::verbAggrData, 'verbal aggression')
     add_item_properties(db, dexter::verbAggrProperties)
   } else if(name=='bs07a')
@@ -65,7 +66,7 @@ example_db = function(name)
                    item_score = .data$response)
     
     ev$data.bs07a$person_id = 1:nrow(ev$data.bs07a)
-    db=start_new_project(rules, ':memory:')
+    db = start_new_project(rules, ':memory:')
     add_booklet(db, ev$data.bs07a, 'Gefechtsangst')
     
   } else if(name=='math')
@@ -79,27 +80,36 @@ example_db = function(name)
                    item_score = .data$response)
     
 
-    db=start_new_project(rules, ':memory:', person_properties=list(female=as.integer(NA)))
+    db = start_new_project(rules, ':memory:', person_properties=list(female=as.integer(NA)))
     add_booklet(db, ev$data.math$data, 'Math')
-    add_item_properties(db, rename(ev$data.math$item,item_id='item'))
+    add_item_properties(db, rename(ev$data.math$item, item_id='item'))
   } else if(name=='timss')
   {
     ev = new_environment()
     data('data.timss07.G8.RUS', package='sirt', envir=ev)
-    raw = as_tibble(ev$data.timss07.G8.RUS$raw) %>%
-      mutate_all(as.character) %>%
-      gather(key='item_id', value='response', -.data$idstud, na.rm=TRUE) %>%
-      mutate(response = if_else(is.na(.data$response), '', .data$response))
-    
+
+    raw = lapply(ev$data.timss07.G8.RUS$raw, function(col)
+      {
+        lab = attr(col,'value.labels')
+        if(is.null(lab)){
+          col
+        } else
+        {
+          as.character(factor(col, lab, names(lab)))
+        }
+      }) %>%
+        as_tibble() %>%
+        gather(key='item_id', value='response', -.data$idstud, na.rm=TRUE) %>%
+        mutate(response = if_else(is.na(.data$response), '', .data$response))
+      
     rules = as_tibble(ev$data.timss07.G8.RUS$scored) %>%
-      mutate(idstud=as.character(.data$idstud)) %>%
       gather(key='item_id', value='item_score', -.data$idstud, na.rm=TRUE) %>%
       inner_join(raw,by=c('idstud','item_id')) %>%
       distinct(.data$item_id, .data$response, .data$item_score)
-    
+
     db = start_new_project(rules, ':memory:')
     
-    raw = raw %>%
+    raw %>%
       rename(person_id = 'idstud') %>%
       mutate(inum = dense_rank(.data$item_id)) %>%
       arrange(.data$person_id, .data$inum) %>%
@@ -109,9 +119,9 @@ example_db = function(name)
       mutate(booklet_id=paste('booklet', dense_rank(.data$booklet_id))) %>%
       group_by(.data$booklet_id) %>%
       filter(n_distinct(.data$person_id)>10) %>%
-      ungroup()
-
-    add_response_data(db, raw)
+      ungroup() %>%
+      add_response_data(db, .)
+    
     add_item_properties(db, rename(ev$data.timss07.G8.RUS$iteminfo, item_id='item'))
   } else if(name=='SF12')
   {

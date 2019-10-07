@@ -1,5 +1,7 @@
 
-body{padding-top:70px;}
+body{
+	padding-top:70px;
+}
 div.navbar-header{
   width:0;
   height:0;
@@ -10,7 +12,7 @@ div.navbar-header{
   body{padding-top:258px;}
 }
 
-#app_quit{ cursor:pointer;}
+#app_quit, #full_screen{ cursor:pointer;}
 
 #project_load_icon{
 	position:fixed;
@@ -19,13 +21,23 @@ div.navbar-header{
 	top:0;
 	left:0;
 	z-index:200;
+	background-color: rgba(255,255,255,.8);
+}
+
+#project_load_icon h1{
+	font-weight:bold;
+	width:200px;
+	text-align:center;
+	position:fixed;
+	left:calc(50% - 100px);
+	bottom:calc(50% + 100px);
+	color:#3498db;
 }
 
 #project_load_icon .loader {
-  z-index:100;
   position:fixed;
-  top:calc(50% - 150px);
-  left:calc(50% - 150px);
+  top:calc(50% - 75px);
+  left:calc(50% - 75px);
   border: 16px solid #f3f3f3;
   border-radius: 50%;
   border-top: 16px solid #3498db;
@@ -44,6 +56,15 @@ div.navbar-header{
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.btn-err > div{
+	white-space:normal;
+}
+
+#item_viewer iframe{
+	width:100%;
+	height:12em;
 }
 
 
@@ -67,6 +88,8 @@ div.dt-add-col{
 	border-top-left-radius:3px;
 	border-top-right-radius:3px;	
 }
+
+
 
 .dt-add-col a.dlg-open{
 	border-color:rgba(0,0,0,.125);
@@ -128,7 +151,7 @@ div.help-page{
 }
 
 #col-ctt-item{
-  max-height:calc(100vh - 16ex);
+  max-height:calc(100vh - 10em);
   overflow-y:auto;
 }
 
@@ -457,10 +480,17 @@ td.numeric, td.dec-1, td.dec-2, td.dec-3{
   border:none;
 }
 
-#oplm_dat td{ 
+#oplm_dat td { 
   border:none;
-  padding-top:1px;
-  padding-bottom:1px;
+  padding: 1px;  
+}
+#oplm_dat th{
+	padding-left:2px;
+	padding-right:2px;
+}
+
+#oplm_dat td:not(:first-child){
+	border-left: 1px solid gray;	
 }
 
 #oplm_dat tbody{
@@ -505,7 +535,18 @@ button.inline{
 }
 
 
-/************* BOOTSTRAP FUTURE ***************/
+
+
+/************* BOOTSTRAP (FUTURE) ***************/
+.col-side-left {
+	padding-left:2em;
+	padding-right:2em;
+	border-right: 1px solid #ccc;	
+}
+.col-side-left + div{
+    border-left: 1px solid #ccc;
+    margin-left: -1px;
+}
 .card {
     position: relative;
     display: -ms-flexbox;

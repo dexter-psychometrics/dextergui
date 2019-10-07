@@ -42,9 +42,9 @@ Below we give a brief tour of dextergui. The navigation bar at the top of the pa
 ![](img/main_bar.PNG)
 
 
-### Start or open a project
+## Start or open a project
 
-Dexter organizes test data in projects. Projects are miniature databases that are saved in a .Sqlite file and contain all your project data, including but not limited to e.g. items, scoring rules and response data. On the project overview page you can start a new project or open an existing project.
+Dexter organizes test data in projects. Projects are miniature databases that are saved in a .Sqlite file and contain all your project data, including but not limited to e.g. items, scoring rules and response data. On the project overview page you can start a new project, open an existing project or browse through an example project. Example project datasets are taken from the packages *dexter*, *psych*, *sirt* and *MLCIRTwithin* if installed. 
 
 ![](img/project_bar.PNG)
 
@@ -187,16 +187,34 @@ In this tab you can fit an IRT model using Conditional Maximum Likelihood or a G
 
 Clicking the button **fit_enorm** will fit the Extended Nominal Response Model, which is a polytomous Rasch model where the scores for each response can have any integer value.
 
-### Abilities
+Once you have estimated a model you can use it in several ways with the tabs below.
 
 ![](img/ability_tabs.PNG)
 
-When you have calibrated your model dexter can compute ability estimates for each person. You have a choice of using a Maximimum Likelihood Estimate (MLE) or an Expected a Priori (EAP) estimate with choice of a Jeffreys or a normal prior. There is an extremely rich selection of plots to see how ability is distributed in your population(s). Enriching your data with person properties (see the projects tab) will let you make the most of these. You can also view and download the estimated abilities per person.
+### Abilities
+
+When you have calibrated your model dexter can compute ability estimates for each person. You have a choice of using a Maximum Likelihood Estimate (MLE) or an Expected a Priori (EAP) estimate with choice of a Jeffreys or a normal prior. There is an extremely rich selection of plots to see how ability is distributed in your population(s). Enriching your data with person properties (see the projects tab) will let you make the most of these. You can also view and download the estimated abilities per person.
 
 ![](img/abplot.PNG){width=75%}
 
 
-**Score-ability tables** lets you compute a score-to-ability transformation table for each booklet. The item parameters resulting from your calibration can be found in the tab **item parameters**.
+### Plausible Values
+
+Plausible values are random samples from the posterior distribution of ability. They are closer to the true distribution of ability in the population than straightforward ability estimates. Plausible values are continuous, as opposed to ability estimates which are granular because of the discrete nature of test scores. Therefore the distribution is much smoother.
+
+### Score-ability tables
+
+Score-ability tables lets you compute a score-to-ability transformation table for each booklet. This is often desirable, e.g. for automatic systems or score transformation tables supplied with paper tests for scoring by teachers.
+
+### Items
+
+After you have fitted a model, the item tabs shows the estimated parameters and a graphical item fit measure. 
+
+## Issues
+
+If you have **problems downloading images and data**, the solution is to open the application in a browser (use the *open in browser* button on the top of the screen). Best results are achieved with the *Chrome* browser, although most others work fine. The exception is currently Microsoft Edge, in which the application does not work very well yet.
+
+If you have another question, encounter a bug or would like to request a feature, please tell us about it on https://github.com/jessekps/dexter/issues . 
 
 
 

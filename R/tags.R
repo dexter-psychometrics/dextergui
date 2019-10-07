@@ -129,9 +129,11 @@ etextInput = function(inputId, label, value = "", ..., inline = FALSE, class='',
 {
   style = out_in_style(inline, width)
   tags$div(style = style$outer,
+           class=paste(class, "shiny-input-container shiny-input-container-inline"),
            tags$label(label, `for` = inputId),
            tags$br(),
-           tags$input(id = inputId, type = "text", value = value, class=paste(class,"form-control"), style = style$inner, ...))
+           tags$input(id = inputId, type = "text", value = value, 
+                      class="form-control", style = style$inner, ...))
 }
 
 etextAreaInput = function(inputId, label, value = "", ..., inline = FALSE, class='',width=NULL,resize=NULL)
@@ -140,7 +142,7 @@ etextAreaInput = function(inputId, label, value = "", ..., inline = FALSE, class
   if(!is.null(resize))
     style$inner = paste0('resize:',resize,';',style$inner)
   tags$div(style = style$outer,
-           class=class,
+           class=paste(class, "shiny-input-container shiny-input-container-inline"),
            tags$label(label, `for` = inputId),
            tags$br(),
            tags$textarea(id = inputId, value = value, class="form-control", style = style$inner, ...))
@@ -151,6 +153,7 @@ enumericInput = function(inputId, label, value=NULL, inline = FALSE, class='', w
 {
   style = out_in_style(inline, width)
   tags$div(style = style$outer,
+           class= "shiny-input-container shiny-input-container-inline",
            tags$label(label, `for` = inputId),
            tags$input(id = inputId, type = "number", value = value, 
                       class=paste(class,"form-control"), style = style$inner, ...))
@@ -217,7 +220,7 @@ rangeInput = function(inputId, label, value=NULL, min = NA, max = NA, step = 1, 
         style = "display:inline-block;whitespace:nowrap;"
       ),
   id = inputId,
-  class = 'form-group e-range-input shiny-input-container-inline',
+  class = 'form-group e-range-input shiny-input-container-inline shiny-input-container',
   style = style$outer
   )
 }
@@ -469,7 +472,7 @@ updateListInput = function(session, inputId, fields=NULL, value=NULL)
 }
 
 
-
+# hidden buttons as proxy for custom dt buttons
 download_buttons = function(dt_id)
 {
   tags$div(downloadButton(paste0(dt_id,'_xl_download'), ''),
@@ -485,15 +488,22 @@ dt_buttons = function(dt_id, title = '', btn_options = NULL )
   fn = function(ext) JS(paste0('function(){return($("#project_pth").text()+"',title,'" + "',ext,'");}'))
 
   list(
-    modifyList(list(extend='copy', text='', className='fa fa-clipboard'), btn_options),
-    modifyList(list(extend='csv', text='csv', title = fn('.csv')), btn_options),
-    modifyList(list(extend='excel', text='', title = fn('.xlsx'), className='fa fa-file-excel-o'), btn_options),
-    modifyList(list(extend='pdf', text='', title = fn('.pdf'), className='fa fa-file-pdf-o'), btn_options),
-    modifyList(list(extend='print', text='', className='fa fa-print'), btn_options),
+    modifyList(list(extend='copy', text='', className='fa fa-clipboard'
+                    ,titleAttr='copy page to clipboard'), btn_options),
+    modifyList(list(extend='csv', text='csv', title = fn('.csv'),
+                    titleAttr = 'save page as csv'), btn_options),
+    modifyList(list(extend='excel', text='', title = fn('.xlsx'), 
+                    titleAttr = 'save page as excel file', className='fa fa-file-excel-o'), btn_options),
+    modifyList(list(extend='pdf', text='', title = fn('.pdf'), 
+                    titleAttr = 'save page as pdf', className='fa fa-file-pdf-o'), btn_options),
+    modifyList(list(extend='print', text='', className='fa fa-print',
+                    titleAttr = 'print page'), btn_options),
     list(extend='', text='', className='fa fa-file-excel-o full-download', 
-         action = unbox(JS(paste0("function(){ $('#",dt_id,"_xl_download').get(0).click()}")))),
+         action = unbox(JS(paste0("function(){ $('#",dt_id,"_xl_download').get(0).click()}"))),
+         titleAttr = 'save complete table as excel file'),
     list(extend='', text='csv', className='full-download', 
-         action = unbox(JS(paste0("function(){ $('#",dt_id,"_csv_download').get(0).click()}"))))
+         action = unbox(JS(paste0("function(){ $('#",dt_id,"_csv_download').get(0).click()}"))),
+         titleAttr = 'save complete table as csv file')
   )
 }
 

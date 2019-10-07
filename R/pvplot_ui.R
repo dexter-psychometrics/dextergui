@@ -1,7 +1,5 @@
 
 
-
-
 pvplotUI = function(){
   tagList(
     fluidRow(
@@ -18,8 +16,7 @@ pvplotUI = function(){
       ),
       column(width = 4,
              hidden(selectInput(inputId = "pvp_group", label = "Grouping Variable", choices=c('none'), width='100%')),
-             #choices = c(testvartypes$name[which(testvartypes$type == "nominal")]),
-             #selected = firstnominal$name)),
+             hidden(selectInput(inputId = "pvp_weight", label = "Weight by", choices=c('none'), width='100%')),
              hidden(multiToggleButton(id = 'pvp_stackfacet',
                                       choices = c(stacked= 'Stacked', facetted='Facetted', joy='Joy'), selected = 'stacked')),
              hidden(selectInput(inputId = "pvp_xvar", label = "x-variable",

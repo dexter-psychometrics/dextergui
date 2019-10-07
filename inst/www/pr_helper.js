@@ -214,7 +214,7 @@ quote_val = function(s, variable)
      {
        var inp = $(this).uniqueId().css('display','inline');
 	   
-       var btn = $('<span class="glyphicon glyphicon-edit pr-helper-button"/>')
+       var btn = $('<span class="glyphicon glyphicon-edit pr-helper-button" title="edit predicate"/>')
             .click(function(e){
                 if($('#' + inp.attr('id') + '-helper').length === 0)
                 {

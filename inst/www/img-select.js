@@ -27,7 +27,8 @@ $.extend(ims_binding, {
     var me = $(el);
     var b = me.find('div.img-select-scrollbody');
     
-    if(message.hasOwnProperty('group_options')) me.data('group_options', $.extend(me.data('group_options'), message.group_options));
+    if(message.hasOwnProperty('group_options')) 
+		me.data('group_options', $.extend(me.data('group_options'), message.group_options));
     
     if(message.hasOwnProperty('choices'))
     {

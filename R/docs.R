@@ -25,8 +25,8 @@ Rd2list <- function(Rd){
 
 getHelpList <- function(...){
   thefile <- help(...)
-  myrd <- utils.getHelpFile(thefile);
-  Rd2list(myrd);
+  myrd <- utils.getHelpFile(thefile)
+  Rd2list(myrd)
 }
 
 

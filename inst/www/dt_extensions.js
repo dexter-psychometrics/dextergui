@@ -65,7 +65,7 @@ $.extend(dtread_binding, {
         colnames = colnames.slice(0,colnames.nthIndexOf(colnames[0],2));
       }
       var res = {};
-	  console.log(colnames)
+	 // console.log(colnames)
       $.each(colnames , function(i,n)
       {
         res[n] = dt.column(i, {page: 'all'}).data().toArray();
@@ -165,7 +165,7 @@ jQuery(function()
         }
 		else
 		{
-			editor.width(td.width()-2)
+			editor.width(td.width()-2);
 		}
 		editor.val(old_data);
         editor.css('position','relative');        
@@ -199,7 +199,7 @@ jQuery(function()
           {
             td.text($(this).val());
           }
-		  td.css('max-width','')
+		  td.css('max-width','');
           $(this).remove();
         });
     
@@ -325,46 +325,23 @@ dt_numcol = function(dtsettings){
     }
   });
   
-  container.find('td.dec-1').each(function()
+  container.find('td[class*="dec-"]').each(function()
   {
-    var t = $(this).text().trim();
+	var t = $(this).text().trim();
+	var n = t.indexOf('.');
+	//var dc = parseInt(this.className.match(/(?<=dec\-)\d+/)[0]); // rstudio browser does not have full regex support
+	var dc = parseInt(this.className.match(/dec\-\d+/)[0].replace('dec-','')); 
     
-    if(! /\.\d$/.test(t))
-    {
-      $(this).text(t + '\u2008\u2007');
-    } else
-    {
-      $(this).text(t);
-    }
-  });
-  
-  container.find('td.dec-2').each(function()
-  {
-    var t = $(this).text().trim();
-
-    var n = t.indexOf('.');
-    if(n <0){
-      $(this).text(t + '\u2008\u2007\u2007');
+	
+	if(n <0){
+      $(this).text(t + '\u2008'+ '\u2007'.repeat(dc));
     } else 
     {
-      $(this).text(t + '\u2007'.repeat(n + 3 - t.length));
+      $(this).text(t + '\u2007'.repeat(n + 1 + dc - t.length));
     }
   });
-  
-  container.find('td.dec-3').each(function()
-  {
-    var t = $(this).text().trim();
-    var n = t.indexOf('.');
-    if(n <0){
-      $(this).text(t + '\u2008\u2007\u2007\u2007');
-    } else 
-    {
-      $(this).text(t + '\u2007'.repeat(n + 4 - t.length ));
-    }
-  });  
-  
-
 };
+
 
 
 dt_btn_dropdown = function(dtsettings){
@@ -466,17 +443,15 @@ dt_toggle_addcol_dialog = function(e)
 				return false;
 			}		
 		});
-		
 	}
-
-
 }
 
 
 draw_dt_footer = function(dtsettings){
+
 	var plot_height=100;
 	var api = new $.fn.dataTable.Api(dtsettings);	
-	
+	var cont = $(api.table().container());
 // to do: maybe try https://github.com/flot/flot, easier axis
 
 	plot_footer = function(dtsettings)
@@ -485,28 +460,24 @@ draw_dt_footer = function(dtsettings){
 		var cont = $(api.table().container());
 		if(cont.find('tfoot.dt-footer-plots').length>0)
 		{
-			if(cont.find('tfoot.dt-footer-plots tr:first-child').height()<100)
-				cont.find('tfoot.dt-footer-plots tr:first-child').height(100);	
-	
-			// bugfix for footer misalignment with scroll
-			/*
-			if(cont.find('.dataTables_scrollBody').length > 0)
-			{
-				var widths = $.map(cont.find('.dataTables_scrollBody tr[role="row"]:first-child td'), function(e,i) {return($(e).outerWidth())});
-				console.log(cont.find('.dataTables_scrollBody tr[role="row"]:first-child td'))
-				
-				cont.find('.dataTables_scrollFootInner table').css('table-layout','fixed');		
-				cont.find('.dataTables_scrollFootInner colgroup').remove();
-				cont.find('.dataTables_scrollFootInner table').append('<colgroup>'+$.map(widths,function(e,i){return '<col style="width:'+e+'px">'}).join('')+'</colgroup>');
-				cont.find('.dataTables_scrollFootInner tfoot.dt-footer-plots tr:first-child td').each(function(i,e){ $(this).width(widths[i])})
-			}
-			*/
-		}
-		cont.find('tfoot.dt-footer-plots td').each(function(i,e){update_footplot(e)});
-
+			if(cont.find('tfoot.dt-footer-plots tr:first-child').height()<109)
+				cont.find('tfoot.dt-footer-plots tr:first-child').height(109);	
+		}		
+		cont.find('tfoot.dt-footer-plots td').each(function(i,e){update_footplot(e)});		
 	}	
-	plot_footer(dtsettings)
-		
+	
+	// fixedcolumn, scrollx, paging and custom footplot, have to delay this to prevent weird bugs
+	plot_footer(dtsettings);
+	setTimeout(function(){cont.find('tfoot.dt-footer-plots tr:first-child td>div').css('display','block');},50);
+
+	
+	$(api.table().container()).on( 'page.dt', function ( e, settings ) {
+		var api = new $.fn.dataTable.Api(settings);	
+		var cont = $(api.table().container());
+		cont.find('tfoot.dt-footer-plots tr:first-child td>div').css('display','none'); // otherwise fixedcolumn calculation will be thrown off
+		setTimeout(function(){cont.find('tfoot.dt-footer-plots tr:first-child td>div').css('display','block')},50);
+	});
+	
 	$(api.table().container()).on( 'column-sizing.dt', function ( e, settings ) {
 		var api = new $.fn.dataTable.Api(settings);			
 		plot_footer(settings);
@@ -520,7 +491,7 @@ update_footplot = function(td, html)
 {
 	td = $(td);
 
-	
+
 	if(typeof html !== "undefined")
 	{
 		var tmp = $(html);
@@ -531,6 +502,7 @@ update_footplot = function(td, html)
 	td.find('div.sparkhist').each(function()
 	{
 		var me = $(this);
+		var txt, freex;
 			
 		me.find('canvas').remove();
 		
@@ -541,6 +513,9 @@ update_footplot = function(td, html)
 		var barw = Math.floor(width/nbars);
 		width = barw * nbars;
 		
+		var mn =  parseFloat(me.data('min'));
+		var mx =  parseFloat(me.data('max'));
+		var labels = me.data('labels_ext');
 		
 		var height = Math.min(width,100);
 		var axis = false
@@ -551,15 +526,19 @@ update_footplot = function(td, html)
 			axis=true;		
 		}
 
+		var tooltip = function(sprk, opts, fields)
+		{ 
+			var x = labels[fields[0].offset];
+			var y = fields[0].value;
+			var c = fields[0].color;
+			return '<span style="color:'+c+';">&#9679;</span><span>'+x+': '+y+'</span>';
+		}
 		me.sparkline(values, 
-			{type: 'bar', barColor: '#bfb5b6', barSpacing: 0, zeroAxis: false, barWidth: barw, height:height+'px',width:width+'px'});
+			{type: 'bar', barColor: '#bfb5b6', barSpacing: 0, zeroAxis: false, barWidth: barw, height:height+'px',width:width+'px',tooltipFormatter:tooltip});
 			
 			
 		if(axis)
-		{
-			var mn =  parseFloat(me.data('min'))
-			var mx =  parseFloat(me.data('max'))
-			
+		{			
 			var ticks = 4;
 			
 			var canv = $('<canvas width="' + width + 'px" height="15px">').appendTo(me).get(0);
@@ -585,7 +564,24 @@ update_footplot = function(td, html)
 				ctx.moveTo(tickx,2.5);
 				ctx.lineTo(tickx, 4.5);
 				ctx.stroke();
-				ctx.fillText(Math.round(mn+i*(mx-mn)/(ticks-1)),tickx,4.5);
+				
+				// take care not to write overlapping labels, it is very ugly
+				txt = Math.round(mn+i*(mx-mn)/(ticks-1));
+				if(i == 0)
+				{
+					ctx.fillText(txt, tickx, 4.5);
+					freex = ctx.measureText(txt).width + tickx;					
+				} 
+				else if(i == ticks - 1)
+				{
+					if(tickx - ctx.measureText(txt).width > freex) 
+						ctx.fillText(txt, tickx, 4.5);
+				}
+				else if(tickx - .5 * ctx.measureText(txt).width > freex) // not first or last and room to write a label
+				{
+					ctx.fillText(txt, tickx,4.5);
+					freex = tickx + .5 * ctx.measureText(txt).width;	
+				}
 			}
 				
 				
@@ -597,30 +593,37 @@ update_footplot = function(td, html)
 	td.find('div.sparkdensity').each(function()
 	{
 		var me = $(this);
+		var txt, freex;
 		me.find('canvas').remove();
 			
 		var width = me.parent().width();
 		var values = me.data('values');
-					
+		
 		var height = Math.min(width,100);
-		var axis = false
-
+		
+		var mn =  parseFloat(me.data('min'))
+		var mx =  parseFloat(me.data('max'))
+		
+		var axis = false;
 		if(height>50)
 		{
 			height = height-16;
 			axis=true;		
 		}
 
+		var tooltip = function(sprk, opts, fields)
+		{ 
+			var x = fields.x * (mx-mn)/values.length + mn;
+			var c = fields.color;
+			return '<span style="color:'+c+';">&#9679;</span><span>'+x.toFixed(2)+'</span>';
+		}
+
 		me.sparkline(values, 
 			{type: 'line', spotColor: '', minSpotColor: '',maxSpotColor: '', height:height, width:width,
-				numberFormatter:function(x){return(x.toFixed(3))}
+				tooltipFormatter:tooltip
 			});
-
 		if(axis)
-		{
-			var mn =  parseFloat(me.data('min'))
-			var mx =  parseFloat(me.data('max'))
-				
+		{			
 			var ticks = 4;
 			
 			var canv = $('<canvas width="' + width + 'px" height="14px">').appendTo(me).get(0);
@@ -654,7 +657,23 @@ update_footplot = function(td, html)
 				ctx.moveTo(tickx,2.5);
 				ctx.lineTo(tickx, 4.5);
 				ctx.stroke();
-				ctx.fillText(numformat(mn+i*(mx-mn)/(ticks-1)),tickx,4.5);
+				txt = numformat(mn+i*(mx-mn)/(ticks-1));
+				// take care not to write overlapping labels, it is very ugly
+				if(i == 0)
+				{
+					ctx.fillText(txt, tickx, 4.5);
+					freex = ctx.measureText(txt).width + tickx;					
+				} 
+				else if(i == ticks - 1)
+				{
+					if(tickx - ctx.measureText(txt).width > freex) 
+						ctx.fillText(txt, tickx, 4.5);
+				}
+				else if(tickx - .5 * ctx.measureText(txt).width > freex) // not first or last and room to write a label
+				{
+					ctx.fillText(txt, tickx, 4.5);
+					freex = tickx + .5 * ctx.measureText(txt).width;	
+				}
 			}
 		}
 	});
@@ -662,5 +681,3 @@ update_footplot = function(td, html)
 	td.find('canvas').css('display','block');	
 
 }
-
-

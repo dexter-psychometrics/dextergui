@@ -150,6 +150,8 @@ Shiny.inputBindings.register(erangeBinding);
 
 
 
+
+
 $(function()
 {
   // actually disable disabled elements
@@ -165,11 +167,54 @@ $(function()
   var navlist = $('ul.navbar-nav');
   if(navlist.length==1) //otherwise don't know what to do, so no quit button
   {
+	var rmenu = $('<ul class="nav navbar-nav navbar-right">');
+	
+	$('<li data-fs="false"><a id="full_screen"><span class="glyphicon glyphicon-fullscreen"></span> Fullscreen</a></li>')
+		.click(function(){
+			if($(this).data('fs'))
+			{
+				$(this).data('fs', false);
+				if (document.exitFullscreen) {
+					document.exitFullscreen();
+				} else if (document.mozCancelFullScreen) { /* Firefox */
+					document.mozCancelFullScreen();
+				} else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+					document.webkitExitFullscreen();
+				} else if (document.msExitFullscreen) { /* IE/Edge */
+					document.msExitFullscreen();
+				}
+			} else
+			{
+				$(this).data('fs', true);
+				var elem = document.documentElement;
+				if (elem.requestFullscreen) {
+					elem.requestFullscreen();
+				} else if (elem.mozRequestFullScreen) { /* Firefox */
+					elem.mozRequestFullScreen();
+				} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+					elem.webkitRequestFullscreen();
+				} else if (elem.msRequestFullscreen) { /* IE/Edge */
+					elem.msRequestFullscreen();
+				}
+			}
+		})
+		.appendTo(rmenu);
+  
+	
+    $('<li><a id="app_quit"><span class="glyphicon glyphicon-log-out"></span> Quit</a></li>')
+		.click(function(){Shiny.onInputChange('quit_application', true);setTimeout(function(){window.open('','_self').close()},300)})
+		.appendTo(rmenu);
+	
+	rmenu.insertAfter(navlist);
+  }
+  /*
+  if(navlist.length==1) //otherwise don't know what to do, so no quit button
+  {
     $('<ul class="nav navbar-nav navbar-right"><li><a id="app_quit"><span class="glyphicon glyphicon-log-out"></span> Quit</a></li></ul>')
 		.click(function(){Shiny.onInputChange('quit_application', true);setTimeout(function(){window.open('','_self').close()},300)})
 		.insertAfter(navlist);
   }
-
+*/
   $('#oplm_btn').click(function()
   {
 	$('#example_datasets').hide();
