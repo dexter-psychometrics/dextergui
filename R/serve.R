@@ -147,10 +147,10 @@ values$ctt_booklets = tia$testStats}
 set_js_vars(db, session)
 lapply(c('project_load_icon','oplm_inputs','example_datasets'), hide)
 show('proj_rules_frm')
-if.else(nrow(rules) > 0, show, hide)('proj_items_frm')
-if.else(nrow(persons) > 0, show, hide)('proj_persons_frm')
-if.else(nrow(rules) > 0, enable_panes, disable_panes)('data_pane')
-if.else(nrow(persons) > 0, enable_panes, disable_panes)(c('ctt_pane', 'inter_pane','enorm_pane'))
+if.else(NROW(rules) > 0, show, hide)('proj_items_frm')
+if.else(NROW(persons) > 0, show, hide)('proj_persons_frm')
+if.else(NROW(rules) > 0, enable_panes, disable_panes)('data_pane')
+if.else(NROW(persons) > 0, enable_panes, disable_panes)(c('ctt_pane', 'inter_pane','enorm_pane'))
 if(any(dbListFields(db,'dxItems') %in% c('item_screenshot','item_html','item_href'))){
 show('item-viewer-btn')} else{
 hide(selector = '#item-viewer-img, #item-viewer-btn')}
@@ -199,7 +199,7 @@ req(new_proj_fn$datapath)
 if(!is.null(db))
 close_project(db)             
 db <<- start_new_project(as.character(new_proj_fn$datapath),
-rules = tibble(item_id='a',response='b',item_score=0) %>% filter(0==1))
+rules=tibble(item_id=character(0),response=character(0),item_score=integer(0)))
 values$ctt_items_settings$keep_search = FALSE
 init_project()
 values$project_name = gsub('\\.\\w+$','',basename(new_proj_fn$datapath), perl=TRUE)
@@ -309,7 +309,7 @@ mutate(item_score = as.integer(.data$item_score), item_id = as.character(.data$i
 response = gsub('\\.0+$','',as.character(.data$response), perl=TRUE)) %>%
 select(.data$item_id, .data$response, .data$item_score)
 output$rules_upload_error = renderText({''})} else if(length(setdiff(c('item_id','noptions','key'),colnames(rules))) == 0){
-values$new_rules = keys_to_rules(rules %>% mutate(nOptions = as.integer(.data$noptions)))
+values$new_rules = keys_to_rules(rules)
 output$rules_upload_error = renderText({''})} else{
 output$output$rules_upload_error = renderText({
 paste0('The input file has to contain columns (item_id, item_score, response) ',
@@ -318,7 +318,7 @@ values$new_rules = NULL}})
 output$new_rules_preview = renderTable({
 req(values$new_rules)
 tibble(column = c('item_id','response','item_score'), 
-values = paste0(sapply(values$new_rules[1:10, c('item_id','response','item_score')], paste, collapse = ', '),', ...'))}, caption = 'file preview')
+values = paste0(sapply(values$new_rules[1:10, c('item_id','response','item_score')], paste, collapse = ', '),', ...'))}, caption = 'rules glimpse preview')
 observeEvent(input$go_import_new_rules,{
 withBusyIndicatorServer("go_import_new_rules",{
 if(is.null(values$new_rules))

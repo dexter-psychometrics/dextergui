@@ -362,18 +362,20 @@ div.shiny-input-container-inline{
   float:left;
 }
 
-.dropdown .dt-buttons a{
+.dropdown .dt-buttons button{
   border:1px solid #ddd;
   border-radius:2px;
   background:white;
   padding:5px;
   text-align:center;
   width:2.5em;
+  height:30px; 
   vertical-align: bottom;
 }
 
-.dropdown .dt-buttons a.fa{
-  font-size: 15px;
+.dropdown .dt-buttons button.fa{
+  font-size: 16px;
+  padding: 1px;
 }
 
 
@@ -393,7 +395,7 @@ div.shiny-input-container-inline{
   width:100px;
   margin-right:-100px;
   position:relative;
-  top:-2em;
+  top:-34px;
   display:inline-block;
 }
 

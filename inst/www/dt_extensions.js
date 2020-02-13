@@ -362,9 +362,9 @@ dt_btn_dropdown = function(dtsettings){
     .prepend(btn)
     .find('div.dt-buttons')
     .addClass('hidden');
-  
-  $('<span class="scope">this page</span>').insertBefore(dt_buttons.find('a:first-child'));  
-  $('<span class="scope">all data</span>').insertBefore(dt_buttons.find('a.full-download').first());  
+
+  $('<span class="scope">this page</span>').insertBefore(dt_buttons.find('button:first-child'));  
+  $('<span class="scope">all data</span>').insertBefore(dt_buttons.find('button.full-download').first());  
 };
 
 

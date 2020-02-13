@@ -1,3 +1,10 @@
+# dextergui 0.2.2
+
+* bugfix for failure in reading rules from file (was caused by minor bugfix newer dplyr versions)
+
+# dextergui 0.2.1
+
+* bugfix for failure of dextergui to start on some systems
 
 # dextergui 0.2.0
 
