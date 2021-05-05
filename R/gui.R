@@ -310,7 +310,7 @@ get_ui = function()
 				    column(5,
 				      tags$h3('Parameters'),
 				      tags$hr(),
-				      hidden(multiToggleButton('coef_format', selected='norm',btn_width='3em',style='margin-left:20em;margin-top:-12px;',
+				      hidden(multiToggleButton('coef_format', selected='norm',btn_width='3em',style='float:right;margin-top:-12px;',
 				                        choices=list(norm = tags$span(class="fa fa-list"),
 				                                     denorm = tags$i(class="fa fa-columns")))),
     				   tags$div(

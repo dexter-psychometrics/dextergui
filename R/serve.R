@@ -309,7 +309,7 @@ mutate(item_score = as.integer(.data$item_score), item_id = as.character(.data$i
 response = gsub('\\.0+$','',as.character(.data$response), perl=TRUE)) %>%
 select(.data$item_id, .data$response, .data$item_score)
 output$rules_upload_error = renderText({''})} else if(length(setdiff(c('item_id','noptions','key'),colnames(rules))) == 0){
-values$new_rules = keys_to_rules(rules)
+values$new_rules = keys_to_rules(rules %>% mutate(nOptions = as.integer(.data$noptions)))
 output$rules_upload_error = renderText({''})} else{
 output$output$rules_upload_error = renderText({
 paste0('The input file has to contain columns (item_id, item_score, response) ',
@@ -318,7 +318,7 @@ values$new_rules = NULL}})
 output$new_rules_preview = renderTable({
 req(values$new_rules)
 tibble(column = c('item_id','response','item_score'), 
-values = paste0(sapply(values$new_rules[1:10, c('item_id','response','item_score')], paste, collapse = ', '),', ...'))}, caption = 'rules glimpse preview')
+values = paste0(sapply(values$new_rules[1:10, c('item_id','response','item_score')], paste, collapse = ', '),', ...'))}, caption = 'file preview')
 observeEvent(input$go_import_new_rules,{
 withBusyIndicatorServer("go_import_new_rules",{
 if(is.null(values$new_rules))

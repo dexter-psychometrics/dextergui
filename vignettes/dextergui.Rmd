@@ -214,7 +214,7 @@ After you have fitted a model, the item tabs shows the estimated parameters and 
 
 If you have **problems downloading images and data**, the solution is to open the application in a browser (use the *open in browser* button on the top of the screen). Best results are achieved with the *Chrome* browser, although most others work fine. The exception is currently Microsoft Edge, in which the application does not work very well yet.
 
-If you have another question, encounter a bug or would like to request a feature, please tell us about it on https://github.com/jessekps/dexter/issues . 
+If you have another question, encounter a bug or would like to request a feature, please tell us about it on https://github.com/dexter-psychometrics/dexter/issues . 
 
 
 

@@ -1,6 +1,10 @@
+# dextergui 0.2.3
+
+* suggest knitr in description at request of cran
+
 # dextergui 0.2.2
 
-* bugfix for failure in reading rules from file (was caused by minor bugfix newer dplyr versions)
+* bugfix for failure in reading rules from file (was caused by minor bugfix in new dplyr version)
 
 # dextergui 0.2.1
 

@@ -15,7 +15,7 @@ install_github('jessekps/dextergui')
 ```
 
 
-If you encounter a bug, please post a minimal reproducible example on [github](https://github.com/jessekps/dexter/issues).
+If you encounter a bug, please post a minimal reproducible example on [github](https://github.com/dexter-psychometrics/dexter/issues).
 
 ## Usage
 
