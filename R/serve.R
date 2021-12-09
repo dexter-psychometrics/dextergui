@@ -1002,6 +1002,7 @@ options = list(dom='<"dropdown" B>lrtip',
 buttons =  dt_buttons('enorm_coef'),
 pageLength = 20, scrollX = TRUE,
 columnDefs = list(list(className = "dec-3", targets = cdef_target)),
+initComplete = JS("dt_btn_dropdown"),
 fnDrawCallback = JS('dt_numcol')))})
 output$enorm_coef_xl_download = downloadHandler(
 filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_enorm_coef.xlsx')},

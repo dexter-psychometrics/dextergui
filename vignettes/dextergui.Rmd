@@ -217,10 +217,3 @@ If you have **problems downloading images and data**, the solution is to open th
 If you have another question, encounter a bug or would like to request a feature, please tell us about it on https://github.com/dexter-psychometrics/dexter/issues . 
 
 
-
-
-
-
-
-
-
