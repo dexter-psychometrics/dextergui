@@ -11,7 +11,7 @@ or for the development version
 
 ```
 library(devtools)
-install_github('jessekps/dextergui')
+install_github('dexter-psychometrics/dextergui')
 ```
 
 
