@@ -2,14 +2,14 @@ Package: dextergui
 Type: Package
 Title: A Graphical User Interface for Dexter
 Version: 0.2.4
-Authors@R: c(person("jesse","koops", role = c("aut", "cre"), email="jesse.koops@cito.nl"),
+Authors@R: c(person("Jesse","Koops", role = c("aut", "cre"), email="jesse.koops@cito.nl"),
               person("Eva","de Schipper", role = c("aut")),
               person("Ivailo","Partchev", role = c("aut", "ctb")),
 	            person("Gunter", "Maris", role = c("aut", "ctb")),
 	            person("Timo", "Bechger", role = c("aut", "ctb")),
 	            person("Gareth", "Watts", role = c("cph"), comment = "author of jquery.sparkline"),
 	            person("Hakim", "El Hattab", role = c("cph"), comment = "author of zoom.js"))
-Maintainer: jesse koops <jesse.koops@cito.nl>
+Maintainer: Jesse Koops <jesse.koops@cito.nl>
 Description: Classical Test and Item analysis, 
   Item Response analysis and data management for educational and psychological tests.
 License: GPL-3

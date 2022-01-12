@@ -134,16 +134,14 @@ group_by(.data$booklet_id) %>%
 summarise(test_score = sparkbox_vals(.data$booklet_score)) %>%
 ungroup() %>%
 mutate(booklet_id = as.character(.data$booklet_id))
-tia$testStats = tia$testStats %>%
-mutate(alpha = round(.data$alpha,3), meanP = round(.data$meanP,3), meanRit = round(.data$meanRit,3), meanRir = round(.data$meanRir,3)) %>%
+tia$booklets = tia$booklets %>%
+mutate_if(is.double, round, digits=3) %>% 
 inner_join(sparks, by='booklet_id')
-if(all(grepl('^\\d+$',tia$testStats$booklet_id))){
-tia$testStats = tia$testStats %>%
-arrange(as.integer(.data$booklet_id))
-tia$itemStats =  tia$itemStats %>%
-arrange(.data$item_id, as.integer(.data$booklet_id))}
-values$ctt_items = tia$itemStats
-values$ctt_booklets = tia$testStats}
+if(all(grepl('^\\d+$',tia$booklets$booklet_id))){
+tia$tbooklets = arrange(tia$booklets, as.integer(.data$booklet_id))
+tia$items = arrange(tia$items, .data$item_id, as.integer(.data$booklet_id))}
+values$ctt_items = tia$items
+values$ctt_booklets = tia$booklets}
 set_js_vars(db, session)
 lapply(c('project_load_icon','oplm_inputs','example_datasets'), hide)
 show('proj_rules_frm')
@@ -651,12 +649,12 @@ cdef = list(list(targets = ncol(values$ctt_booklets)-1,
 render = JS("function(data, type, full){ return '<span class=\"sparkbox\">' + data + '</span>' }")),
 list(className = "numeric", targets = list(7)),
 list(className = "dec-3", targets = list(2,3,4,5)))
-drawcallback = init_sparks(.box = list(chartRangeMin = 0, chartRangeMax = max(values$ctt_booklets$maxTestScore)),
+drawcallback = init_sparks(.box = list(chartRangeMin = 0, chartRangeMax = max(values$ctt_booklets$max_booklet_score)),
 add_js='dt_numcol(settings);')
 selected = 1
 isolate({
 if(!is.null(values$inter_booklet)){
-selected = min(which(values$ctt_booklets == values$inter_booklet))}})
+selected = min(which(values$ctt_booklets$booklet_id == values$inter_booklet))}})
 datatable({ values$ctt_booklets}, 
 rownames = FALSE, selection = list(mode = 'single', selected = selected), 
 class='compact', extensions = 'Buttons',
@@ -686,7 +684,7 @@ output$inter_current_booklet = renderUI(tags$b(paste('Booklet:', values$inter_bo
 observe({
 req(values$inter_booklet, values$inter_plot_items)
 stats = filter(values$ctt_booklets, .data$booklet_id==values$inter_booklet)
-if(stats$N <= stats$nItems){
+if(stats$n_persons <= stats$n_items){
 updateSlider(session, 'interslider', 
 error='Cannot compute the interaction model because the number of responses is smaller than the number of items')
 return(NULL);}
@@ -799,7 +797,7 @@ booklet = pull(ctt_item, booklet_id)
 lgnd = distractor_plot(db, predicate={booklet_id==booklet}, item_id = item_id,main='pos. $item_position in $booklet_id',sub=NULL,legend=FALSE)} else{
 isolate({
 booklets = values$ctt_items %>% 
-filter(.data$item_id==!!item_id & .data$n>1) %>%
+filter(.data$item_id==!!item_id & .data$n_persons>1) %>%
 pull(.data$booklet_id)})
 ly = matrix_layout(length(booklets)) 
 if(ncol(ly)<=3){
@@ -844,7 +842,7 @@ tags$tfoot(tags$tr(tags$td(),
 tags$td(),
 tags$td('sum: ', style='text-align: right;'), 
 tags$td(tags$div(sum(df$n), style="background-color:lightgrey;width:100%;height:100%;text-align:center;")),
-tags$td(paste('avg: ',ctt_item$meanScore), style='text-align: right;'),
+tags$td(paste('avg: ',ctt_item$mean_score), style='text-align: right;'),
 tags$td()),
 style="font-style:italic;"))
 df$n = paste(df$n, sum(df$n),sep=',')

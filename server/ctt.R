@@ -8,14 +8,14 @@ output$inter_booklets = renderDataTable({
               list(className = "numeric", targets = list(7)),
               list(className = "dec-3", targets = list(2,3,4,5)))
   
-  drawcallback = init_sparks(.box = list(chartRangeMin = 0, chartRangeMax = max(values$ctt_booklets$maxTestScore)),
+  drawcallback = init_sparks(.box = list(chartRangeMin = 0, chartRangeMax = max(values$ctt_booklets$max_booklet_score)),
                              add_js='dt_numcol(settings);')
   
   selected = 1
   isolate({
     if(!is.null(values$inter_booklet))
     {
-      selected = min(which(values$ctt_booklets == values$inter_booklet))
+      selected = min(which(values$ctt_booklets$booklet_id == values$inter_booklet))
     }
   })
   
@@ -30,6 +30,7 @@ output$inter_booklets = renderDataTable({
   
 })
 
+#write minus the spark column
 output$inter_booklets_xl_download = downloadHandler(
     filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_ctt_booklets.xlsx')},
     content = function(file) {
@@ -60,7 +61,7 @@ observe({
   req(values$inter_booklet, values$inter_plot_items)
   stats = filter(values$ctt_booklets, .data$booklet_id==values$inter_booklet)
 
-  if(stats$N <= stats$nItems)
+  if(stats$n_persons <= stats$n_items)
   {
     updateSlider(session, 'interslider', 
                  error='Cannot compute the interaction model because the number of responses is smaller than the number of items')
@@ -244,7 +245,7 @@ distr_plot = function(update_legend=TRUE)
   {
     isolate({
       booklets = values$ctt_items %>% 
-        filter(.data$item_id==!!item_id & .data$n>1) %>%
+        filter(.data$item_id==!!item_id & .data$n_persons>1) %>%
         pull(.data$booklet_id)
      })
     
@@ -325,7 +326,7 @@ output$item_rules = renderDataTable({
                            tags$td(),
                            tags$td('sum: ', style='text-align: right;'), 
                            tags$td(tags$div(sum(df$n), style="background-color:lightgrey;width:100%;height:100%;text-align:center;")),
-                           tags$td(paste('avg: ',ctt_item$meanScore), style='text-align: right;'),
+                           tags$td(paste('avg: ',ctt_item$mean_score), style='text-align: right;'),
                            tags$td()),
                    style="font-style:italic;"))
       

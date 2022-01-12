@@ -137,25 +137,35 @@ im_is_connected = function(im)
   return(all(visited))
 }
 
-ctt_items_table = function(itemStats, averaged)
+combined_var = function(means,vars,n)
+{
+  if(length(vars)<=1L)
+    return(vars)
+  q = (n-1)*vars + n*means^2
+  (sum(q) - sum(n)* weighted.mean(means,n)^2)/(sum(n)-1)
+}
+
+ctt_items_table = function(items, averaged)
 {
   if(averaged)
   {
-    itemStats = itemStats %>% 
+    items = items %>% 
       group_by(.data$item_id) %>% 
-      summarise(nBooklets = n(), 
-                meanScore = weighted.mean(.data$meanScore, w = .data$n, na.rm = TRUE), 
-                sdScore = weighted.mean(.data$sdScore, w = .data$n, na.rm = TRUE), 
-                maxScore = max(.data$maxScore), 
-                pvalue = weighted.mean(.data$pvalue, w = .data$n, na.rm = TRUE), 
-                rit = weighted.mean(.data$rit, w = .data$n, na.rm = TRUE), 
-                rir = weighted.mean(.data$rir, w = .data$n, na.rm = TRUE), n = sum(.data$n, na.rm = TRUE))
+      summarise(n_booklets = n(), 
+                w_mean_score = weighted.mean(.data$mean_score, w = .data$n_persons, na.rm = TRUE), 
+                sd_score = sqrt(combined_var(.data$mean_score, .data$sd_score^2, .data$n_persons)),
+                max_score = max(.data$max_score), 
+                pvalue = weighted.mean(.data$pvalue, w = .data$n_persons, na.rm = TRUE), 
+                rit = weighted.mean(.data$rit, w = .data$n_persons, na.rm = TRUE), 
+                rir = weighted.mean(.data$rir, w = .data$n_persons, na.rm = TRUE), 
+                n_persons = sum(.data$n_persons)) %>%
+      ungroup() %>%
+      rename(mean_score = .data$w_mean_score)
   }
   
-  # do some rounding and aesthetic renaming
-  itemStats %>%
+  items %>%
     mutate(pvalue = round(.data$pvalue,3), rit = round(.data$rit,3), rir = round(.data$rir,3),
-          meanScore = round(.data$meanScore,2), sdScore = round(.data$sdScore,2))
+          mean_score = round(.data$mean_score,2), sd_score = round(.data$sd_score,2))
 
 }
 

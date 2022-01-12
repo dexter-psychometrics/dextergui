@@ -1,5 +1,10 @@
 # dextergui 0.2.3
 
+* minor corrections to GUI behavior
+* updates for dexter 1.1.5
+
+# dextergui 0.2.3
+
 * suggest knitr in description at request of cran
 
 # dextergui 0.2.2

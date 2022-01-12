@@ -62,23 +62,18 @@ init_project = function()
       ungroup() %>%
       mutate(booklet_id = as.character(.data$booklet_id))
     
-    tia$testStats = tia$testStats %>%
-      mutate(alpha = round(.data$alpha,3), meanP = round(.data$meanP,3), meanRit = round(.data$meanRit,3), meanRir = round(.data$meanRir,3)) %>%
+    tia$booklets = tia$booklets %>%
+      mutate_if(is.double, round, digits=3) %>% 
       inner_join(sparks, by='booklet_id')
     
-    if(all(grepl('^\\d+$',tia$testStats$booklet_id)))
+    if(all(grepl('^\\d+$',tia$booklets$booklet_id)))
     {
-      tia$testStats = tia$testStats %>%
-        arrange(as.integer(.data$booklet_id))
-      
-      tia$itemStats =  tia$itemStats %>%
-        arrange(.data$item_id, as.integer(.data$booklet_id))
+      tia$tbooklets = arrange(tia$booklets, as.integer(.data$booklet_id))
+      tia$items = arrange(tia$items, .data$item_id, as.integer(.data$booklet_id))
     }
     
-    values$ctt_items = tia$itemStats
-    
-    values$ctt_booklets = tia$testStats
-
+    values$ctt_items = tia$items
+    values$ctt_booklets = tia$booklets
   }
   
   set_js_vars(db, session)

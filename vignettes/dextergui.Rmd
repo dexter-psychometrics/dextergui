@@ -142,7 +142,7 @@ tia=tia_tables(db)
 ```
 
 ```{r}
-tia$testStats %>%
+tia$booklets %>%
   mutate_if(is.double, round, digits=3) %>%
   kable()
 ```
@@ -163,7 +163,7 @@ The Rasch model fits this item very well, so the two curves practically coincide
 The items tab shows classical statistics for the items on the left, including RiT, RiR and pvalue.
 
 ```{r}
-tia$itemStats %>%
+tia$items %>%
   slice(1:10) %>%
   mutate_if(is.double, round, digits=3) %>%
   kable()
