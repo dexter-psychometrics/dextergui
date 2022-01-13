@@ -326,6 +326,22 @@ get_ui = function()
 			  width=9)),
 		  value = 'enorm_pane'
 		),
+		tabPanel('Subgroup analysis', 
+		  tags$h2('this tab is under construction'),
+		  fluidRow(
+		    column(6,tags$h3('Profiles'),
+		      selectInput('prof_booklet',label='Booklet',choices=c('choose booklet_id' = '')),
+		      selectInput('prof_item',label='Item property',choices=c('choose item property' = '')),
+		      selectInput('prof_item_xvals',label='x axis values',choices=c('choose x-axis' = ''), multiple=TRUE),
+		      selectInput('prof_person', label='Person property',choices=c('choose person property' = '')),
+		      plotOutput('prof_plot')
+		    ),
+       column(6,tags$h3('DIF'),
+          selectInput('DIF_person', label='Person property',choices=c('choose person property' = '')),
+          plotOutput('DIF_plot')
+        )),
+		         
+     value='DIF_pane'),
 		tabPanel('Help', 
 		         tags$div(
 		           tags$div(

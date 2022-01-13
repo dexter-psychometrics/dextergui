@@ -201,8 +201,11 @@ observeEvent(input$quit_application,{
 ++abplot.R++      
   
 ++plausible_values.R++  
-      
-# compose.R
+
+
+# DIF etc. ----------------------------------------------------------------
+
+++subgroup.R++  
   
 }
   

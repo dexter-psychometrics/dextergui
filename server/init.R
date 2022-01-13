@@ -17,12 +17,7 @@ init_project = function()
   output$data_import_result = renderUI({})
   output$data_import_result_long = renderUI({})
   updateSlider(session, 'enorm_slider',list())
-  
-  
-  updateSelectInput(session, 'pp_booklet', choices = booklets)
-  
-  
-  
+
   # reset reactiveValues
   for(nm in names(default_reactive)){ values[[nm]] = default_reactive[[nm]] }
   
@@ -33,14 +28,13 @@ init_project = function()
   values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
   values$person_properties = persons
   
-  
-  updateSelectInput(session, 'pp_person_prop', choices = colnames(persons)[-1])
-  updateSelectInput(session, 'pp_item_prop', choices = colnames(items)[-1])
-  
   interaction_models$clear()
 
   if(length(booklets) > 0)
   {
+    #for profile plot
+    updateSelectInput(session, 'prof_booklet', choices = booklets, selected = booklets[1])
+    
     data = get_resp_data(db,summarised=FALSE,retain_person_id=FALSE)
 
     ## prepare interaction
@@ -86,7 +80,7 @@ init_project = function()
   if.else(NROW(persons) > 0, show, hide)('proj_persons_frm')
   
   if.else(NROW(rules) > 0, enable_panes, disable_panes)('data_pane')
-  if.else(NROW(persons) > 0, enable_panes, disable_panes)(c('ctt_pane', 'inter_pane','enorm_pane'))
+  if.else(NROW(persons) > 0, enable_panes, disable_panes)(c('ctt_pane', 'inter_pane','enorm_pane','DIF_pane'))
   
   if(any(dbListFields(db,'dxItems') %in% c('item_screenshot','item_html','item_href')))
   {
@@ -115,7 +109,7 @@ init_project = function()
 if(is.null(db))
 {
   lapply(c('project_load_icon','proj_items_frm','proj_persons_frm','proj_rules_frm'), hide)
-  disable_panes(c( 'ctt_pane', 'inter_pane','data_pane', 'enorm_pane'))
+  disable_panes(c( 'ctt_pane', 'inter_pane','data_pane', 'enorm_pane', 'DIF_pane'))
 } else
 {
   init_project()

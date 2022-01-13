@@ -111,7 +111,6 @@ updateSelectInput(session,'prs_abl_plot_fill', choices = covariates)
 output$data_import_result = renderUI({})
 output$data_import_result_long = renderUI({})
 updateSlider(session, 'enorm_slider',list())
-updateSelectInput(session, 'pp_booklet', choices = booklets)
 for(nm in names(default_reactive)){ values[[nm]] = default_reactive[[nm]] }
 rules = get_rules(db)
 persons = get_persons(db) %>% mutate_if(is_integer_, as.integer)
@@ -119,10 +118,9 @@ values$rules = rules
 items = as_tibble(get_items(db))
 values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
 values$person_properties = persons
-updateSelectInput(session, 'pp_person_prop', choices = colnames(persons)[-1])
-updateSelectInput(session, 'pp_item_prop', choices = colnames(items)[-1])
 interaction_models$clear()
 if(length(booklets) > 0){
+updateSelectInput(session, 'prof_booklet', choices = booklets, selected = booklets[1])
 data = get_resp_data(db,summarised=FALSE,retain_person_id=FALSE)
 for(bkl in booklets){
 env = new.env()
@@ -148,7 +146,7 @@ show('proj_rules_frm')
 if.else(NROW(rules) > 0, show, hide)('proj_items_frm')
 if.else(NROW(persons) > 0, show, hide)('proj_persons_frm')
 if.else(NROW(rules) > 0, enable_panes, disable_panes)('data_pane')
-if.else(NROW(persons) > 0, enable_panes, disable_panes)(c('ctt_pane', 'inter_pane','enorm_pane'))
+if.else(NROW(persons) > 0, enable_panes, disable_panes)(c('ctt_pane', 'inter_pane','enorm_pane','DIF_pane'))
 if(any(dbListFields(db,'dxItems') %in% c('item_screenshot','item_html','item_href'))){
 show('item-viewer-btn')} else{
 hide(selector = '#item-viewer-img, #item-viewer-btn')}
@@ -159,7 +157,7 @@ hide(selector="#enorm_tabs + div.tab-content > div.tab-pane > *:not(.well)")
 updateImgSelect(session, inputId = "abp_plotbar",choices=list())}
 if(is.null(db)){
 lapply(c('project_load_icon','proj_items_frm','proj_persons_frm','proj_rules_frm'), hide)
-disable_panes(c( 'ctt_pane', 'inter_pane','data_pane', 'enorm_pane'))} else{
+disable_panes(c( 'ctt_pane', 'inter_pane','data_pane', 'enorm_pane', 'DIF_pane'))} else{
 init_project()}
 output$project_pth = renderText({values$project_name})
 hide('oplm_inputs')
@@ -1769,6 +1767,63 @@ ggsave(file, plot = plt, device = "png", units = 'cm',
 width = input$pvp_download_width, height = input$pvp_download_height,
 dpi = 600)},
 contentType = "image/png"
-)}
+)
+observe({
+req(input$prof_booklet, values$person_properties)
+items = get_items(db) %>%
+inner_join(get_design(db), by='item_id') %>%
+filter(booklet_id == input$prof_booklet) %>%
+select(-.data$item_id)
+iprop = tibble(name=colnames(items), n = sapply(items, n_distinct)) %>%
+filter(between(.data$n, 2, nrow(items)/2))
+updateSelectInput(session, 'prof_item', choices = iprop$name)
+if(ncol(values$person_properties)>1){
+persons = values$person_properties %>%
+semi_join(dbGetQuery(db,
+'SELECT person_id FROM dxadministrations WHERE booklet_id=:booklet;', 
+list(booklet=input$prof_booklet)),
+by='person_id') %>%
+select(-.data$person_id)
+pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) %>%
+filter(between(.data$n, 2, 3))
+updateSelectInput(session, 'prof_person', choices = pprop$name)}})
+observe({
+req(input$prof_booklet, input$prof_item)
+prop = get_items(db) %>%
+inner_join(get_design(db), by='item_id') %>%
+filter(booklet_id == input$prof_booklet) %>%
+pull(.data[[input$prof_item]]) %>%
+unique()
+updateSelectInput(session, 'prof_item_xvals', choices = prop, selected=prop[1:(round(length(prop)/2))])})
+output$prof_plot = renderPlot({
+req(input$prof_booklet,input$prof_item, input$prof_person)
+stm = "get_responses(db, 
+columns=c('person_id','item_id','item_score',input$prof_item, input$prof_person),
+predicate=booklet_id == input$prof_booklet)"
+dat = eval(parse(text=stm))
+if(length(input$prof_item_xvals)>1){
+prop = get_items(db) %>%
+inner_join(get_design(db), by='item_id') %>%
+filter(booklet_id == input$prof_booklet) %>%
+distinct(.data[[input$prof_item]]) %>%
+mutate(x = .data[[input$prof_item]] %in% input$prof_item_xvals) %>%
+group_by(x) %>%
+mutate(p = paste(.data[[input$prof_item]], collapse=','))
+dat = inner_join(dat, prop, by=input$prof_item) %>%
+select(-.data[[input$prof_item]])
+colnames(dat)[colnames(dat) == 'p'] = input$prof_item}
+profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
+main=paste(input$prof_booklet, input$prof_item, sep='-'))})
+observe({
+req(values$person_properties)
+if(ncol(values$person_properties)>1){
+persons = select(values$person_properties, -.data$person_id)
+pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) %>%
+filter(.data$n==2)
+updateSelectInput(session, 'DIF_person', choices = pprop$name)}})
+output$DIF_plot = renderPlot({
+req(input$DIF_person)
+d = DIF(db, person_property=input$DIF_person)
+plot(d)})  }
 shinyApp(get_ui(), server)}
 
