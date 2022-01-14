@@ -1,6 +1,15 @@
 # to do: style inputs
 #style pluts (legend size, etc.)
 #to do: case where no props
+
+#for profile plot
+observe({
+  req(values$ctt_booklets, input$main_navbar == 'DIF_pane')
+  print(values$ctt_booklets)
+  updateSelectInput(session, 'prof_booklet', choices=values$ctt_booklets$booklet_id)
+})
+
+
 observe({
   req(input$prof_booklet, values$person_properties)
 
@@ -70,13 +79,13 @@ output$prof_plot = renderPlot({
   
   
   profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
-               main=paste(input$prof_booklet, input$prof_item, sep='-'))
+               main=input$prof_item)
 })
 
 
 # DIF
 observe({
-  req(values$person_properties)
+  req(values$person_properties, input$main_navbar == 'DIF_pane')
   
   if(ncol(values$person_properties)>1)
   {
@@ -85,12 +94,22 @@ observe({
     pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) %>%
       filter(.data$n==2)
     
-    updateSelectInput(session, 'DIF_person', choices = pprop$name)
+    updateSelectInput(session, 'DIF_person', choices = pprop$name, select = pprop$name[1])
   }
 })
 
-output$DIF_plot = renderPlot({
-  req(input$DIF_person)
-  d = DIF(db, person_property=input$DIF_person)
-  plot(d)
+DIF_object = reactive({
+  req(db,input$DIF_person)
+  DIF(db, person_property=input$DIF_person)
 })
+
+output$DIF_plot = renderPlot({
+  plot(DIF_object())
+})
+
+
+output$DIF_text = renderPrint({
+  print(DIF_object())
+})
+
+

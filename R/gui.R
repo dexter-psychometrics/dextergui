@@ -334,11 +334,12 @@ get_ui = function()
 		      selectInput('prof_item',label='Item property',choices=c('choose item property' = '')),
 		      selectInput('prof_item_xvals',label='x axis values',choices=c('choose x-axis' = ''), multiple=TRUE),
 		      selectInput('prof_person', label='Person property',choices=c('choose person property' = '')),
-		      plotOutput('prof_plot')
+		      plotOutput('prof_plot', height='600px')
 		    ),
        column(6,tags$h3('DIF'),
           selectInput('DIF_person', label='Person property',choices=c('choose person property' = '')),
-          plotOutput('DIF_plot')
+          textOutput('DIF_text'),
+          plotOutput('DIF_plot', height='600px')
         )),
 		         
      value='DIF_pane'),

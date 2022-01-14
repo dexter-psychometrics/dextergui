@@ -32,9 +32,7 @@ init_project = function()
 
   if(length(booklets) > 0)
   {
-    #for profile plot
-    updateSelectInput(session, 'prof_booklet', choices = booklets, selected = booklets[1])
-    
+
     data = get_resp_data(db,summarised=FALSE,retain_person_id=FALSE)
 
     ## prepare interaction

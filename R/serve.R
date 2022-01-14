@@ -120,7 +120,6 @@ values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_
 values$person_properties = persons
 interaction_models$clear()
 if(length(booklets) > 0){
-updateSelectInput(session, 'prof_booklet', choices = booklets, selected = booklets[1])
 data = get_resp_data(db,summarised=FALSE,retain_person_id=FALSE)
 for(bkl in booklets){
 env = new.env()
@@ -1769,6 +1768,10 @@ dpi = 600)},
 contentType = "image/png"
 )
 observe({
+req(values$ctt_booklets, input$main_navbar == 'DIF_pane')
+print(values$ctt_booklets)
+updateSelectInput(session, 'prof_booklet', choices=values$ctt_booklets$booklet_id)})
+observe({
 req(input$prof_booklet, values$person_properties)
 items = get_items(db) %>%
 inner_join(get_design(db), by='item_id') %>%
@@ -1815,15 +1818,18 @@ colnames(dat)[colnames(dat) == 'p'] = input$prof_item}
 profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
 main=paste(input$prof_booklet, input$prof_item, sep='-'))})
 observe({
-req(values$person_properties)
+req(values$person_properties, input$main_navbar == 'DIF_pane')
 if(ncol(values$person_properties)>1){
 persons = select(values$person_properties, -.data$person_id)
 pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) %>%
 filter(.data$n==2)
-updateSelectInput(session, 'DIF_person', choices = pprop$name)}})
+updateSelectInput(session, 'DIF_person', choices = pprop$name, select = pprop$name[1])}})
+DIF_object = reactive({
+req(db,input$DIF_person)
+DIF(db, person_property=input$DIF_person)})
 output$DIF_plot = renderPlot({
-req(input$DIF_person)
-d = DIF(db, person_property=input$DIF_person)
-plot(d)})  }
+plot(DIF_object())})
+output$DIF_text = renderPrint({
+print(DIF_object())})}
 shinyApp(get_ui(), server)}
 
