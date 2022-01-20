@@ -96,11 +96,10 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
   if(!is.null(dbpath) && !file.exists(dbpath))
     stop(paste0("file '", dbpath, "' not found"))
 
-  # nicer plots
-  options(shiny.usecairo = TRUE)
-  
-  # 100mb upload limit
-  options(shiny.maxRequestSize = 100*1024^2)
+  # nicer plots, 100mb upload limit, no text prog bars
+  backup_opts = options(shiny.usecairo = TRUE, shiny.maxRequestSize = 100*1024^2, dexter.progress=FALSE)
+
+  on.exit({options(backup_opts)})
 
   server = function(input, output, session)
   {

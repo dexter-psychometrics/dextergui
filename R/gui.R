@@ -327,19 +327,31 @@ get_ui = function()
 		  value = 'enorm_pane'
 		),
 		tabPanel('Subgroup analysis', 
-		  tags$h2('this tab is under construction'),
 		  fluidRow(
-		    column(6,tags$h3('Profiles'),
-		      selectInput('prof_booklet',label='Booklet',choices=c('choose booklet_id' = '')),
-		      selectInput('prof_item',label='Item property',choices=c('choose item property' = '')),
-		      selectInput('prof_item_xvals',label='x axis values',choices=c('choose x-axis' = ''), multiple=TRUE),
-		      selectInput('prof_person', label='Person property',choices=c('choose person property' = '')),
-		      plotOutput('prof_plot', height='600px')
+		    column(6,tags$h3('Profile plot'),
+		      eselectInput('prof_booklet',label='Booklet',choices=c('choose booklet_id' = ''), inline=TRUE, width='20%'),
+		      eselectInput('prof_item',label='Item property',choices=c('choose item property' = ''), inline=TRUE, width='20%'),
+		      eselectInput('prof_item_xvals',label='x axis value(s)',choices=c('choose x-axis' = ''), multiple=TRUE, inline=TRUE,width='28%'),
+		      eselectInput('prof_person', label='Person property',choices=c('choose person property' = ''), inline=TRUE,width='20%'),
+		      tags$a(tags$i(class="fa fa-question-circle"),class="btn btn-lg", style='margin-top:-1.5em;',
+		             `data-toggle`='collapse',`data-target`='#help-profile_plot'),
+		      tags$div(getHelpList('profile_plot', package='dexter')$details,
+		               class="collapse",
+		               id='help-profile_plot', style='margin-top:1em;margin-bottom:1em;'),
+		      plotOutput('prof_plot', height='600px',width='90%'),
+		      class="col-side-left"
 		    ),
        column(6,tags$h3('DIF'),
-          selectInput('DIF_person', label='Person property',choices=c('choose person property' = '')),
-          textOutput('DIF_text'),
-          plotOutput('DIF_plot', height='600px')
+          eselectInput('DIF_person', label='Person property',choices=c('choose person property' = ''), inline=TRUE, width='20%'),
+          eselectInput('DIF_item',label='Order axes by',choices=c('choose item property' = ''), inline=TRUE, width='20%'),
+          tags$a(tags$i(class="fa fa-question-circle"),class="btn btn-lg", style='margin-top:-1.5em;',
+                 `data-toggle`='collapse',`data-target`='#help-DIF_test'),
+          tags$div(paste(getHelpList('DIF', package='dexter')$details,
+                         getHelpList('plot.DIF_stats', package='dexter')$details),
+                   class="collapse",
+                   id='help-DIF_test', style='margin-top:1em;margin-bottom:1em;'),
+          tags$p(textOutput('DIF_text')),
+          plotOutput('DIF_plot', height='600px',width='90%')
         )),
 		         
      value='DIF_pane'),

@@ -5,7 +5,6 @@
 #for profile plot
 observe({
   req(values$ctt_booklets, input$main_navbar == 'DIF_pane')
-  print(values$ctt_booklets)
   updateSelectInput(session, 'prof_booklet', choices=values$ctt_booklets$booklet_id)
 })
 
@@ -22,6 +21,7 @@ observe({
     filter(between(.data$n, 2, nrow(items)/2))
   
   updateSelectInput(session, 'prof_item', choices = iprop$name)
+  updateSelectInput(session, 'DIF_item', choices = c('item_id', iprop$name))
   
   if(ncol(values$person_properties)>1)
   {
@@ -40,14 +40,19 @@ observe({
   }
 })
 
-observe({
+prof_item_prop_vals = reactive({
   req(input$prof_booklet, input$prof_item)
   
-  prop = get_items(db) %>%
+  get_items(db) %>%
     inner_join(get_design(db), by='item_id') %>%
     filter(booklet_id == input$prof_booklet) %>%
     pull(.data[[input$prof_item]]) %>%
     unique()
+})
+
+observe({
+  req(input$prof_booklet, input$prof_item, prof_item_prop_vals())
+  prop = prof_item_prop_vals()
   
   updateSelectInput(session, 'prof_item_xvals', choices = prop, selected=prop[1:(round(length(prop)/2))])
 })
@@ -56,30 +61,41 @@ observe({
 # this needs a little more checking on 2 unique values
 output$prof_plot = renderPlot({
   req(input$prof_booklet,input$prof_item, input$prof_person)
+  
+  nvals = length(prof_item_prop_vals())
+  
+  req(between(length(input$prof_item_xvals),1,nvals-1))
+  
   stm = "get_responses(db, 
                 columns=c('person_id','item_id','item_score',input$prof_item, input$prof_person),
                 predicate=booklet_id == input$prof_booklet)"
   
   dat = eval(parse(text=stm))
-  if(length(input$prof_item_xvals)>1)
+
+  if(nvals != 2)
   {
-    prop = get_items(db) %>%
-      inner_join(get_design(db), by='item_id') %>%
-      filter(booklet_id == input$prof_booklet) %>%
-      distinct(.data[[input$prof_item]]) %>%
-      mutate(x = .data[[input$prof_item]] %in% input$prof_item_xvals) %>%
-      group_by(x) %>%
-      mutate(p = paste(.data[[input$prof_item]], collapse=','))
-    
-    dat = inner_join(dat, prop, by=input$prof_item) %>%
-      select(-.data[[input$prof_item]])
+    prop = tibble(val = prof_item_prop_vals(),
+                  g = .data$val %in% input$prof_item_xvals) %>%
+      group_by(g) %>%
+      mutate(p = paste(.data$val, collapse=','))
+
+    dat = inner_join(prop, dat, by=c('val'=input$prof_item))
     
     colnames(dat)[colnames(dat) == 'p'] = input$prof_item
   }
-  
-  
-  profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
-               main=input$prof_item)
+
+  if(packageVersion("dexter") >= '1.1.5')
+  {
+    profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
+                 main=input$prof_item, 
+                 x=paste(input$prof_item_xvals, collapse=','), 
+                 cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)
+  } else
+  {
+    profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
+                 main=input$prof_item, 
+                 x=paste(input$prof_item_xvals, collapse=','))
+  }
 })
 
 
@@ -98,13 +114,22 @@ observe({
   }
 })
 
+
 DIF_object = reactive({
   req(db,input$DIF_person)
   DIF(db, person_property=input$DIF_person)
 })
 
 output$DIF_plot = renderPlot({
-  plot(DIF_object())
+  req(input$DIF_item, DIF_object())
+  items=NULL
+  if(input$DIF_item != 'item_id')
+  {
+    items = get_items(db) %>%
+      arrange(.data[[input$DIF_item]]) %>%
+      pull(.data$item_id)
+  }
+  plot(DIF_object(), items=items, cex.axis=1)
 })
 
 
