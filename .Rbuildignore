@@ -8,4 +8,5 @@
 ^example
 ^cran-comments\.md$
 ^inno
+^example import files
 LICENSE

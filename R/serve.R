@@ -72,6 +72,7 @@ backup_opts = options(shiny.usecairo = TRUE, shiny.maxRequestSize = 100*1024^2, 
 on.exit({options(backup_opts)})
 server = function(input, output, session){
 db = NULL
+options(shiny.usecairo = TRUE, shiny.maxRequestSize = 100*1024^2, dexter.progress=FALSE)
 if(!is.null(dbpath)) 
 db = open_project(dbpath)
 default_reactive = list(rules = NULL, new_rules = NULL, ctt_items=NULL, ctt_booklets=NULL,
@@ -1820,7 +1821,7 @@ if(packageVersion("dexter") >= '1.1.5'){
 profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
 main=input$prof_item, 
 x=paste(input$prof_item_xvals, collapse=','), 
-cex.legend=1.2,cex.axis=1.2,cex.lab=1.2)} else{
+cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)} else{
 profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
 main=input$prof_item, 
 x=paste(input$prof_item_xvals, collapse=','))}})
@@ -1843,6 +1844,6 @@ arrange(.data[[input$DIF_item]]) %>%
 pull(.data$item_id)}
 plot(DIF_object(), items=items, cex.axis=1)})
 output$DIF_text = renderPrint({
-print(DIF_object())})}
+DIF_object()})}
 shinyApp(get_ui(), server)}
 

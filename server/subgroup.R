@@ -134,7 +134,7 @@ output$DIF_plot = renderPlot({
 
 
 output$DIF_text = renderPrint({
-  print(DIF_object())
+  DIF_object()
 })
 
 

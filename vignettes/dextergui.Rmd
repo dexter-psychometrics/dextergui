@@ -6,8 +6,10 @@ output:
     toc: true
 vignette: >
   %\VignetteIndexEntry{Dextergui}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 <style>img{border:none;}</style>
@@ -39,7 +41,10 @@ With dextergui you can:
 
 Below we give a brief tour of dextergui. The navigation bar at the top of the page lets you switch between the main components of dexter. We'll start on the *project* tab.
 
-![](img/main_bar.PNG)
+![](img/project_bar.PNG)
+
+
+The easiest way to familiarize yourself with dextergui is to open an example project, e.g. the verbal agression dataset, by clicking on _example datasets_ and then choose _verbal aggression_. This is a rich one booklet dataset with person and item properties and ideal for exploring the gui.
 
 
 ## Start or open a project
@@ -136,7 +141,8 @@ In the *classical analysis* tab you will find two further tabs, *booklets* and *
 The booklets tab shows a table of classical statistics per booklet and plots of the item total regressions.
 
 ```{r, include=FALSE, message=FALSE}
-db = start_new_project(verbAggrRules,':memory:')
+db = start_new_project(verbAggrRules,':memory:', person_properties=list(gender='NA'))
+add_item_properties(db, verbAggrProperties)
 add_booklet(db, verbAggrData, "agg")
 tia=tia_tables(db)
 ```
@@ -150,7 +156,6 @@ tia$booklets %>%
 ```{r, fig.width=5, fig.height=5}
 f=fit_inter(db)
 plot(f, "S1DoScold", show.observed=TRUE)
-close_project(db)
 ```
 
 The plot shows regressions based on two models: the interaction model is shown with a thicker but lighter line, and the Extended Rasch model is shown with a thinner, darker line. The unsmoothed data is shown as red dots. The *curtains* are drawn at the 5% lowest and the 5% highest sum scores. This can all be adjusted with the input fields on top of the plot.
@@ -191,16 +196,16 @@ Once you have estimated a model you can use it in several ways with the tabs bel
 
 ![](img/ability_tabs.PNG)
 
-### Abilities
+### Abilities & Plausible Values
 
-When you have calibrated your model dexter can compute ability estimates for each person. You have a choice of using a Maximum Likelihood Estimate (MLE) or an Expected a Priori (EAP) estimate with choice of a Jeffreys or a normal prior. There is an extremely rich selection of plots to see how ability is distributed in your population(s). Enriching your data with person properties (see the projects tab) will let you make the most of these. You can also view and download the estimated abilities per person.
+When you have calibrated your model dexter can compute ability estimates for each person. You have a choice of using a Maximum Likelihood Estimate (MLE) or an Expected a Priori (EAP) estimate with choice of a Jeffreys or a normal prior. 
+
+Plausible values are random samples from the posterior distribution of ability. They are closer to the true distribution of ability in the population than straightforward ability estimates. Plausible values are continuous, as opposed to ability estimates which are granular because of the discrete nature of test scores. Therefore the distribution is much smoother.
+
+There is an extremely rich selection of plots to see how ability is distributed in your population(s). Enriching your data with person properties (see the projects tab) will let you make the most of these. You can also view or download the estimated abilities per person.
 
 ![](img/abplot.PNG){width=75%}
 
-
-### Plausible Values
-
-Plausible values are random samples from the posterior distribution of ability. They are closer to the true distribution of ability in the population than straightforward ability estimates. Plausible values are continuous, as opposed to ability estimates which are granular because of the discrete nature of test scores. Therefore the distribution is much smoother.
 
 ### Score-ability tables
 
@@ -210,6 +215,26 @@ Score-ability tables lets you compute a score-to-ability transformation table fo
 
 After you have fitted a model, the item tabs shows the estimated parameters and a graphical item fit measure. 
 
+## Subgroup analysis
+
+How do different (groups of) persons achieve the same test score? To answer this question you need to first define person properties and item properties in your data. Then you can make a profile plot (on a per booklet basis).
+
+This plot of the verbal aggression set (see the included examples), shows that, controlled for the same overall verbal aggression test score, Women tend to Shout more and Men tend to Curse and Scold more (Men tend to be more verbally aggressive than Women overall, so it is not true to say that Women tend to shout more in general).
+
+![](img/profile_buttons.PNG)
+
+```{r,fig.width=5,fig.height=5,results='hide'}
+get_items(db) %>%
+  mutate(behavior2=if_else(behavior %in% c('Curse','Scold'),'Curse,Scold',behavior)) %>%
+  add_item_properties(db,.)
+
+profile_plot(db, item_property='behavior2', covariate='gender',x='Curse,Scold',main='behavior')
+
+```
+
+There is also a test for DIF at the item level.
+
+
 ## Issues
 
 If you have **problems downloading images and data**, the solution is to open the application in a browser (use the *open in browser* button on the top of the screen). Best results are achieved with the *Chrome* browser, although most others work fine. The exception is currently Microsoft Edge, in which the application does not work very well yet.
@@ -217,3 +242,6 @@ If you have **problems downloading images and data**, the solution is to open th
 If you have another question, encounter a bug or would like to request a feature, please tell us about it on https://github.com/dexter-psychometrics/dexter/issues . 
 
 
+```{r, include=FALSE}
+close_project(db)
+```

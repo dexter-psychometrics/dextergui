@@ -98,13 +98,16 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
 
   # nicer plots, 100mb upload limit, no text prog bars
   backup_opts = options(shiny.usecairo = TRUE, shiny.maxRequestSize = 100*1024^2, dexter.progress=FALSE)
-
   on.exit({options(backup_opts)})
+
 
   server = function(input, output, session)
   {
     # some server globals
     db = NULL
+    
+    #apparently have to repeat this
+    options(shiny.usecairo = TRUE, shiny.maxRequestSize = 100*1024^2, dexter.progress=FALSE)
     
     if(!is.null(dbpath)) 
       db = open_project(dbpath)
