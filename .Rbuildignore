@@ -1,9 +1,6 @@
 ^CRAN-RELEASE$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^eva_werkmap
-^help
-^ideas
 ^server
 ^example
 ^cran-comments\.md$

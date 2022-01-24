@@ -232,8 +232,11 @@ profile_plot(db, item_property='behavior2', covariate='gender',x='Curse,Scold',m
 
 ```
 
-There is also a test for DIF at the item level.
+There is also a test for DIF at the item-pair level.
 
+## Learn more
+
+The extensive [online documentation for dexter](https://dexter-psychometrics.github.io/dexter/) shows how to do many of the things you can do in the GUI in the R console and explains much more about plausible values, profile plot, DIF and much more. 
 
 ## Issues
 

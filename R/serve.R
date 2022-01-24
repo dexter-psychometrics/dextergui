@@ -1813,7 +1813,7 @@ dat = eval(parse(text=stm))
 if(nvals != 2){
 prop = tibble(val = prof_item_prop_vals(),
 g = .data$val %in% input$prof_item_xvals) %>%
-group_by(g) %>%
+group_by(.data$g) %>%
 mutate(p = paste(.data$val, collapse=','))
 dat = inner_join(prop, dat, by=c('val'=input$prof_item))
 colnames(dat)[colnames(dat) == 'p'] = input$prof_item}
@@ -1831,7 +1831,7 @@ if(ncol(values$person_properties)>1){
 persons = select(values$person_properties, -.data$person_id)
 pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) %>%
 filter(.data$n==2)
-updateSelectInput(session, 'DIF_person', choices = pprop$name, select = pprop$name[1])}})
+updateSelectInput(session, 'DIF_person', choices = pprop$name, selected = pprop$name[1])}})
 DIF_object = reactive({
 req(db,input$DIF_person)
 DIF(db, person_property=input$DIF_person)})
