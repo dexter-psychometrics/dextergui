@@ -1,6 +1,6 @@
-# dextergui 0.2.3
+# dextergui 0.2.4
 
-* minor corrections to GUI behavior
+* a new tab with DIF and subgroup analysis
 * updates for dexter 1.1.5
 
 # dextergui 0.2.3

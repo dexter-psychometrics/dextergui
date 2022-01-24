@@ -1825,6 +1825,36 @@ cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)} else{
 profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
 main=input$prof_item, 
 x=paste(input$prof_item_xvals, collapse=','))}})
+output$prof_plot_download = downloadHandler(
+filename = function(){
+paste0('profile_',input$prof_booklet,input$prof_item,'.png')},
+content = function(file){
+req(input$prof_booklet,input$prof_item, input$prof_person)
+nvals = length(prof_item_prop_vals())
+req(between(length(input$prof_item_xvals),1,nvals-1))
+stm = "get_responses(db, 
+columns=c('person_id','item_id','item_score',input$prof_item, input$prof_person),
+predicate=booklet_id == input$prof_booklet)"
+dat = eval(parse(text=stm))
+if(nvals != 2){
+prop = tibble(val = prof_item_prop_vals(),
+g = .data$val %in% input$prof_item_xvals) %>%
+group_by(.data$g) %>%
+mutate(p = paste(.data$val, collapse=','))
+dat = inner_join(prop, dat, by=c('val'=input$prof_item))
+colnames(dat)[colnames(dat) == 'p'] = input$prof_item}
+png(filename=file, type='cairo-png', width=960,height=640)
+if(packageVersion("dexter") >= '1.1.5'){
+profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
+main=input$prof_item, 
+x=paste(input$prof_item_xvals, collapse=','), 
+cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)} else{
+profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
+main=input$prof_item, 
+x=paste(input$prof_item_xvals, collapse=','))}
+dev.off()},
+contentType = "image/png"
+)
 observe({
 req(values$person_properties, input$main_navbar == 'DIF_pane')
 if(ncol(values$person_properties)>1){
@@ -1844,6 +1874,21 @@ arrange(.data[[input$DIF_item]]) %>%
 pull(.data$item_id)}
 plot(DIF_object(), items=items, cex.axis=1)})
 output$DIF_text = renderPrint({
-DIF_object()})}
+DIF_object()})
+output$DIF_plot_download = downloadHandler(
+filename = function(){
+paste0('DIF',input$DIF_person,'.png')},
+content = function(file){
+req(DIF_object()) 
+items=NULL
+if(input$DIF_item != 'item_id'){
+items = get_items(db) %>%
+arrange(.data[[input$DIF_item]]) %>%
+pull(.data$item_id)}
+png(filename=file, type='cairo-png', width=960,height=640)
+plot(DIF_object(), items=items,cex.axis=1)
+dev.off()},
+contentType = "image/png"
+)  }
 shinyApp(get_ui(), server)}
 

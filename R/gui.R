@@ -299,12 +299,6 @@ get_ui = function()
 				      uiOutput("abl_tables_plot_ti_hinf"), style='position:relative;'),
              selectizeInput('abl_tables_plot_booklet', 'Choose booklets to plot', c(), multiple = TRUE),
 				      style="padding-left:4em;"))),
-				# tabPanel('Test composition', value='new_test',
-				#          dataTableOutput('new_test_item_select'),
-				#          tableOutput('new_test_matrix'),
-				#          dataTableOutput('new_test_omz'),
-				#          plotOutput('new_test_inf')
-				# ),
 				tabPanel('Items', value='enorm_items',
 				  fluidRow(
 				    column(5,
@@ -338,7 +332,7 @@ get_ui = function()
 		      tags$div(getHelpList('profile_plot', package='dexter')$details,
 		               class="collapse",
 		               id='help-profile_plot', style='margin-top:1em;margin-bottom:1em;'),
-		      plotOutput('prof_plot', height='600px',width='90%'),
+		      plot_add_download_btn(plotOutput('prof_plot', height='600px',width='90%')), 
 		      class="col-side-left"
 		    ),
        column(6,tags$h3('DIF'),
@@ -351,7 +345,7 @@ get_ui = function()
                    class="collapse",
                    id='help-DIF_test', style='margin-top:1em;margin-bottom:1em;'),
           tags$p(textOutput('DIF_text')),
-          plotOutput('DIF_plot', height='600px',width='90%')
+          plot_add_download_btn(plotOutput('DIF_plot', height='600px',width='90%'))
         )),
 		         
      value='DIF_pane'),
