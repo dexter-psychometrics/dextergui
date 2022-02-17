@@ -1,5 +1,5 @@
 
-suggest rmarkdown at request of Kurt Hornik 
+fixes for deprecated functions/parameters in ggplot
 
 kind regards,
 Jesse

@@ -265,7 +265,7 @@ get_ui = function()
 			  tabsetPanel(type = 'tabs',id='enorm_tabs',
 				tabPanel('Abilities', value='ability',
 				  # standard_errors weggelaten, op termijn zouden die in abplot meegenomen kunnen worden       
-				  wellPanel(generate_inputs(ability, omit=c('dataSrc','parms','person_level','asOPLM','standard_errors','use_draw'), 
+				  wellPanel(generate_inputs(ability, omit=c('dataSrc','parms','standard_errors','use_draw','npv'), 
 				                            inline=TRUE,width='120px'),
 				            style='border:none;'),
 				  tabsetPanel(type='tabs',
@@ -276,12 +276,12 @@ get_ui = function()
 					         dataTableOutput('person_abilities'),
 					         download_buttons('person_abilities')))),
 				tabPanel('Plausible values', value='plausible_values',
-				  wellPanel(generate_inputs(plausible_values, omit=c('dataSrc','parms','use_draw','asOPLM','covariates'), 
+				  wellPanel(generate_inputs(plausible_values, omit=c('dataSrc','parms','use_draw','covariates'), 
 				                            inline=TRUE,width='150px'),
 				            style='border:none;'),
 				  pvplotUI()),
 				tabPanel('Score-ability tables', value='ability_tables',
-				  wellPanel(generate_inputs(ability_tables, omit=c('parms','design','standard_errors','asOPLM'), 
+				  wellPanel(generate_inputs(ability_tables, omit=c('parms','design','standard_errors','npv'), 
 				                            input_type=list(use_draw='numeric'),inline=TRUE, width='120px'),
 				            style='border:none;'),
 				  fluidRow(

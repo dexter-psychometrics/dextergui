@@ -92,12 +92,12 @@ observeEvent(values$plausible_values,
                      theme_nothing()} 
                  else if (id == "bar") {
                    p <- ggplot(values$plausible_values, aes_string(firstnominal$name, "PV1", fill = firstnominal$name)) +
-                     geom_bar(stat = "summary", fun.y = "mean",na.rm=TRUE) +
+                     stat_summary(geom='bar', fun = "mean",na.rm=TRUE) +
                      theme(legend.position = "none") + 
                      theme_nothing()} 
                  else if (id == "line") {
                    p <- ggplot(values$plausible_values, aes_string(firstordinal$name, "PV1", fill = firstnominal$name, colour = firstnominal$name)) +
-                     geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) + 
+                     stat_summary(geom='line', fun = "mean", na.rm=TRUE) + 
                      theme_nothing()} 
                  else if (id == "scat") {
                    p <- ggplot(values$plausible_values, aes_string(firstcontinuous$name, "PV1", colour = firstnominal$name)) + 
@@ -306,17 +306,23 @@ pvplot = reactive({
          
          # BOX PLOT
          box = {
-           
-           p <- ggplot(values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]])), 
-                       aes_string(x = input$pvp_group, y = "PV1", 
-                                  colour = input$pvp_group)) +
-             geom_boxplot(alpha = input$pvp_trans, show.legend = FALSE, na.rm=TRUE) +
-             theme_minimal()
-           
-           if (input$pvp_fill == TRUE){
-             p <- p + aes_string(fill = input$pvp_group)
+           if(input$pvp_group == 'none')
+           {
+             p = ggplot(values$plausible_values, aes_string(y = "PV1")) +
+               geom_boxplot(alpha = input$pvp_trans, show.legend = FALSE, na.rm=TRUE) +
+               theme_minimal()
+           } else
+           {
+             p <- ggplot(values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]])), 
+                         aes_string(x = input$pvp_group, y = "PV1", 
+                                    colour = input$pvp_group)) +
+               geom_boxplot(alpha = input$pvp_trans, show.legend = FALSE, na.rm=TRUE) +
+               theme_minimal()
+             
+             if (input$pvp_fill == TRUE){
+               p <- p + aes_string(fill = input$pvp_group)
+             }
            }
-           
          },
          
          # ECDF
@@ -420,7 +426,7 @@ pvplot = reactive({
            updateCheckboxInput(session, "pvp_fill", value = TRUE)
            
            p <- ggplot(values$plausible_values, aes_string(input$pvp_group, "PV1")) +
-             geom_bar(stat = "summary", fun.y = "mean", 
+             stat_summary(geom='bar', fun = "mean", 
                       show.legend = FALSE,
                       alpha = input$pvp_trans,
                       na.rm=TRUE) +
@@ -443,9 +449,9 @@ pvplot = reactive({
              theme_minimal()
            
            if (input$pvp_group == "none"){
-             p <- p + geom_line(stat = "summary", fun.y = "mean", colour = input$pvp_color, na.rm=TRUE)
+             p <- p + stat_summary(geom='line', fun = "mean", colour = input$pvp_color, na.rm=TRUE)
            } else if (input$pvp_group != "none"){
-             p <- p + geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) +
+             p <- p + stat_summary(geom='line', fun = "mean", na.rm=TRUE) +
                aes_string(fill = input$pvp_group, colour = input$pvp_group)
              
              if (input$pvp_linetype == TRUE) {

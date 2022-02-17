@@ -7,16 +7,16 @@ observe(
   input$ability_prior
   if(input$ability_method != 'EAP')
   {
-    runjs('hide_inputs("#ability_prior,#ability_npv,#ability_mu,#ability_sigma")')
+    runjs('hide_inputs("#ability_prior,#ability_mu,#ability_sigma")')
   } else
   {
     runjs('show_inputs("#ability_prior")')
     if(input$ability_prior == 'normal')
     {
-      runjs('show_inputs("#ability_npv,#ability_mu,#ability_sigma")')
+      runjs('show_inputs("#ability_mu,#ability_sigma")')
     } else
     {
-      runjs('hide_inputs("#ability_npv,#ability_mu,#ability_sigma")')
+      runjs('hide_inputs("#ability_mu,#ability_sigma")')
     }
   }
 })
@@ -30,18 +30,18 @@ observe(
     
     if(input$ability_tables_method != 'EAP')
     {
-      runjs('hide_inputs("#ability_tables_prior,#ability_tables_npv,#ability_tables_mu,#ability_tables_sigma")')
+      runjs('hide_inputs("#ability_tables_prior,#ability_tables_mu,#ability_tables_sigma")')
     } else
     {
       runjs('show_inputs("#ability_tables_prior")')
       if(input$ability_tables_prior == 'normal')
       {
-        runjs('show_inputs("#ability_tables_npv,#ability_tables_mu,#ability_tables_sigma")')
+        runjs('show_inputs("#ability_tables_mu,#ability_tables_sigma")')
         if(!is.null(values$parms) && values$parms$inputs$method == 'Bayes')
           runjs('show_inputs("#ability_tables_use_draw")')
       } else
       {
-        runjs('hide_inputs("#ability_tables_npv,#ability_tables_mu,#ability_tables_sigma")')
+        runjs('hide_inputs("#ability_tables_mu,#ability_tables_sigma")')
       }
     }
   })
@@ -63,7 +63,7 @@ observeEvent(input$go_ability, {
     } else
     {
       abl = ability(db, parms = values$parms, method = input$ability_method, prior = input$ability_prior, 
-                    npv = input$ability_npv, mu = input$ability_mu, sigma = input$ability_sigma )
+                     mu = input$ability_mu, sigma = input$ability_sigma )
     }
     
     
@@ -111,7 +111,7 @@ observeEvent(input$go_ability_tables, {
       go_fit_enorm()
     
     values$abl_tables = ability_tables(parms = values$parms, method = input$ability_tables_method,
-                                       npv = input$ability_tables_npv, sigma = input$ability_tables_sigma,
+                                       sigma = input$ability_tables_sigma,
                                        prior = input$ability_tables_prior)
       
     bkl = unique(pull(values$abl_tables, .data$booklet_id))

@@ -44,7 +44,7 @@ Below we give a brief tour of dextergui. The navigation bar at the top of the pa
 ![](img/project_bar.PNG)
 
 
-The easiest way to familiarize yourself with dextergui is to open an example project, e.g. the verbal agression dataset, by clicking on _example datasets_ and then choose _verbal aggression_. This is a rich one booklet dataset with person and item properties and ideal for exploring the gui.
+The easiest way to familiarize yourself with dextergui is to open an example project, e.g. the verbal aggression dataset, by clicking on _example datasets_ and then choose _verbal aggression_. This is a rich one booklet dataset with person and item properties and ideal for exploring the gui.
 
 
 ## Start or open a project

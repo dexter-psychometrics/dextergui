@@ -73,12 +73,12 @@ observeEvent(values$person_abl,
             theme_nothing()} 
         else if (id == "bar") {
           p <- ggplot(values$person_abl, aes_string(firstnominal$name, "theta", fill = firstnominal$name)) +
-            geom_bar(stat = "summary", fun.y = "mean",na.rm=TRUE) +
+            stat_summary(geom='bar',fun = "mean",na.rm=TRUE) +
             theme(legend.position = "none") + 
             theme_nothing()} 
         else if (id == "line") {
           p <- ggplot(values$person_abl, aes_string(firstordinal$name, "theta", fill = firstnominal$name, colour = firstnominal$name)) +
-            geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) + 
+            stat_summary(geom='line', fun = "mean", na.rm=TRUE) + 
             theme_nothing()} 
         else if (id == "scat") {
           p <- ggplot(values$person_abl, aes_string(firstcontinuous$name, "theta", colour = firstnominal$name)) + 
@@ -275,15 +275,22 @@ abplot = reactive({
            
            # BOX PLOT
            box = {
-             
-             p <- ggplot(values$person_abl %>% mutate(!!input$abp_group := as.factor(.data[[input$abp_group]])), 
+             if(input$abp_group == 'none')
+             {
+               p = ggplot(values$person_abl, aes_string(y = "theta")) +
+                 geom_boxplot(alpha = input$abp_trans, show.legend = FALSE, na.rm=TRUE) +
+                 theme_minimal()
+             } else
+             {
+               p <- ggplot(values$person_abl %>% mutate(!!input$abp_group := as.factor(.data[[input$abp_group]])), 
                          aes_string(x = input$abp_group, y = "theta", 
                                               colour = input$abp_group)) +
                geom_boxplot(alpha = input$abp_trans, show.legend = FALSE, na.rm=TRUE) +
                theme_minimal()
              
-             if (input$abp_fill == TRUE){
-               p <- p + aes_string(fill = input$abp_group)
+               if (input$abp_fill){
+                 p <- p + aes_string(fill = input$abp_group)
+               }
              }
              
            },
@@ -365,7 +372,7 @@ abplot = reactive({
              updateCheckboxInput(session, "abp_fill", value = TRUE)
              
              p <- ggplot(values$person_abl, aes_string(input$abp_group, "theta")) +
-               geom_bar(stat = "summary", fun.y = "mean", 
+               stat_summary(geom='bar', fun = "mean", 
                         show.legend = FALSE,
                         alpha = input$abp_trans,
                         na.rm=TRUE) +
@@ -388,9 +395,9 @@ abplot = reactive({
                theme_minimal()
              
              if (input$abp_group == "none"){
-               p <- p + geom_line(stat = "summary", fun.y = "mean", colour = input$abp_color, na.rm=TRUE)
+               p <- p + stat_summary(geom = "line", fun = "mean", colour = input$abp_color, na.rm=TRUE)
              } else if (input$abp_group != "none"){
-               p <- p + geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) +
+               p <- p + stat_summary(geom = "line", fun = "mean", na.rm=TRUE) +
                  aes_string(fill = input$abp_group, colour = input$abp_group)
                
                if (input$abp_linetype == TRUE) {

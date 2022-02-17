@@ -1,6 +1,3 @@
-# to do: style inputs
-#style pluts (legend size, etc.)
-#to do: case where no props
 
 #for profile plot
 observe({

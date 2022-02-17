@@ -1045,23 +1045,23 @@ observe({
 input$ability_method
 input$ability_prior
 if(input$ability_method != 'EAP'){
-runjs('hide_inputs("#ability_prior,#ability_npv,#ability_mu,#ability_sigma")')} else{
+runjs('hide_inputs("#ability_prior,#ability_mu,#ability_sigma")')} else{
 runjs('show_inputs("#ability_prior")')
 if(input$ability_prior == 'normal'){
-runjs('show_inputs("#ability_npv,#ability_mu,#ability_sigma")')} else{
-runjs('hide_inputs("#ability_npv,#ability_mu,#ability_sigma")')}}})
+runjs('show_inputs("#ability_mu,#ability_sigma")')} else{
+runjs('hide_inputs("#ability_mu,#ability_sigma")')}}})
 observe({
 input$ability_tables_method
 input$ability_tables_prior
 runjs('hide_inputs("#ability_tables_use_draw")')
 if(input$ability_tables_method != 'EAP'){
-runjs('hide_inputs("#ability_tables_prior,#ability_tables_npv,#ability_tables_mu,#ability_tables_sigma")')} else{
+runjs('hide_inputs("#ability_tables_prior,#ability_tables_mu,#ability_tables_sigma")')} else{
 runjs('show_inputs("#ability_tables_prior")')
 if(input$ability_tables_prior == 'normal'){
-runjs('show_inputs("#ability_tables_npv,#ability_tables_mu,#ability_tables_sigma")')
+runjs('show_inputs("#ability_tables_mu,#ability_tables_sigma")')
 if(!is.null(values$parms) && values$parms$inputs$method == 'Bayes')
 runjs('show_inputs("#ability_tables_use_draw")')} else{
-runjs('hide_inputs("#ability_tables_npv,#ability_tables_mu,#ability_tables_sigma")')}}})
+runjs('hide_inputs("#ability_tables_mu,#ability_tables_sigma")')}}})
 observeEvent(input$go_ability, {
 withBusyIndicatorServer("go_ability",{
 if(is.null(values$parms)) 
@@ -1070,7 +1070,7 @@ if(!(is.null(input$ability_predicate) || trimws(input$ability_predicate) == ''))
 abl = eval(parse(text=paste0("ability(db, parms=values$parms, predicate={",input$ability_predicate,"},method='",input$ability_method,
 "',prior='",input$ability_prior,"',mu=",input$ability_mu,",sigma=",input$ability_sigma,")")))} else{
 abl = ability(db, parms = values$parms, method = input$ability_method, prior = input$ability_prior, 
-npv = input$ability_npv, mu = input$ability_mu, sigma = input$ability_sigma )}
+mu = input$ability_mu, sigma = input$ability_sigma )}
 values$person_abl = inner_join(abl, get_persons(db), by='person_id')
 show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="ability"] > *')})})
 output$person_abilities = renderDataTable({
@@ -1096,7 +1096,7 @@ withBusyIndicatorServer("go_ability_tables",{
 if(is.null(values$parms)) 
 go_fit_enorm()
 values$abl_tables = ability_tables(parms = values$parms, method = input$ability_tables_method,
-npv = input$ability_tables_npv, sigma = input$ability_tables_sigma,
+sigma = input$ability_tables_sigma,
 prior = input$ability_tables_prior)
 bkl = unique(pull(values$abl_tables, .data$booklet_id))
 if(is.null(isolate(input$abl_tables_plot_booklet))){
@@ -1243,12 +1243,12 @@ geom_density(aes_string(group = firstnominal$name, colour = firstnominal$name),n
 theme_nothing()} 
 else if (id == "bar") {
 p <- ggplot(values$person_abl, aes_string(firstnominal$name, "theta", fill = firstnominal$name)) +
-geom_bar(stat = "summary", fun.y = "mean",na.rm=TRUE) +
+stat_summary(geom='bar',fun = "mean",na.rm=TRUE) +
 theme(legend.position = "none") + 
 theme_nothing()} 
 else if (id == "line") {
 p <- ggplot(values$person_abl, aes_string(firstordinal$name, "theta", fill = firstnominal$name, colour = firstnominal$name)) +
-geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) + 
+stat_summary(geom='line', fun = "mean", na.rm=TRUE) + 
 theme_nothing()} 
 else if (id == "scat") {
 p <- ggplot(values$person_abl, aes_string(firstcontinuous$name, "theta", colour = firstnominal$name)) + 
@@ -1359,13 +1359,17 @@ p <- p +
 theme(legend.position = "none") +
 theme_minimal()},
 box = {
+if(input$abp_group == 'none'){
+p = ggplot(values$person_abl, aes_string(y = "theta")) +
+geom_boxplot(alpha = input$abp_trans, show.legend = FALSE, na.rm=TRUE) +
+theme_minimal()} else{
 p <- ggplot(values$person_abl %>% mutate(!!input$abp_group := as.factor(.data[[input$abp_group]])), 
 aes_string(x = input$abp_group, y = "theta", 
 colour = input$abp_group)) +
 geom_boxplot(alpha = input$abp_trans, show.legend = FALSE, na.rm=TRUE) +
 theme_minimal()
-if (input$abp_fill == TRUE){
-p <- p + aes_string(fill = input$abp_group)}},
+if (input$abp_fill){
+p <- p + aes_string(fill = input$abp_group)}}},
 ecdf = {
 if (input$abp_group != "none"){
 p <- ggplot(values$person_abl %>% mutate(!!input$abp_group := as.factor(.data[[input$abp_group]])), 
@@ -1404,7 +1408,7 @@ p <- p + theme_minimal()},
 bar = {
 updateCheckboxInput(session, "abp_fill", value = TRUE)
 p <- ggplot(values$person_abl, aes_string(input$abp_group, "theta")) +
-geom_bar(stat = "summary", fun.y = "mean", 
+stat_summary(geom='bar', fun = "mean", 
 show.legend = FALSE,
 alpha = input$abp_trans,
 na.rm=TRUE) +
@@ -1419,8 +1423,8 @@ values$person_abl %>% mutate(!!input$abp_group := as.factor(.data[[input$abp_gro
 aes_string(input$abp_xvar, "theta")) +
 theme_minimal()
 if (input$abp_group == "none"){
-p <- p + geom_line(stat = "summary", fun.y = "mean", colour = input$abp_color, na.rm=TRUE)} else if (input$abp_group != "none"){
-p <- p + geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) +
+p <- p + stat_summary(geom = "line", fun = "mean", colour = input$abp_color, na.rm=TRUE)} else if (input$abp_group != "none"){
+p <- p + stat_summary(geom = "line", fun = "mean", na.rm=TRUE) +
 aes_string(fill = input$abp_group, colour = input$abp_group)
 if (input$abp_linetype == TRUE) {
 p <- p + aes_string(linetype = input$abp_group)}}},
@@ -1525,12 +1529,12 @@ geom_density(aes_string(group = firstnominal$name, colour = firstnominal$name),n
 theme_nothing()} 
 else if (id == "bar") {
 p <- ggplot(values$plausible_values, aes_string(firstnominal$name, "PV1", fill = firstnominal$name)) +
-geom_bar(stat = "summary", fun.y = "mean",na.rm=TRUE) +
+stat_summary(geom='bar', fun = "mean",na.rm=TRUE) +
 theme(legend.position = "none") + 
 theme_nothing()} 
 else if (id == "line") {
 p <- ggplot(values$plausible_values, aes_string(firstordinal$name, "PV1", fill = firstnominal$name, colour = firstnominal$name)) +
-geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) + 
+stat_summary(geom='line', fun = "mean", na.rm=TRUE) + 
 theme_nothing()} 
 else if (id == "scat") {
 p <- ggplot(values$plausible_values, aes_string(firstcontinuous$name, "PV1", colour = firstnominal$name)) + 
@@ -1650,13 +1654,17 @@ p <- p +
 theme(legend.position = "none") +
 theme_minimal()},
 box = {
+if(input$pvp_group == 'none'){
+p = ggplot(values$plausible_values, aes_string(y = "PV1")) +
+geom_boxplot(alpha = input$pvp_trans, show.legend = FALSE, na.rm=TRUE) +
+theme_minimal()} else{
 p <- ggplot(values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$pvp_group]])), 
 aes_string(x = input$pvp_group, y = "PV1", 
 colour = input$pvp_group)) +
 geom_boxplot(alpha = input$pvp_trans, show.legend = FALSE, na.rm=TRUE) +
 theme_minimal()
 if (input$pvp_fill == TRUE){
-p <- p + aes_string(fill = input$pvp_group)}},
+p <- p + aes_string(fill = input$pvp_group)}}},
 ecdf = {
 if (input$pvp_group != "none" && input$pvp_weight != "none"){
 data_weighted <- values$plausible_values[order(values$plausible_values$PV1),]
@@ -1709,7 +1717,7 @@ p <- p + theme_minimal()},
 bar = {
 updateCheckboxInput(session, "pvp_fill", value = TRUE)
 p <- ggplot(values$plausible_values, aes_string(input$pvp_group, "PV1")) +
-geom_bar(stat = "summary", fun.y = "mean", 
+stat_summary(geom='bar', fun = "mean", 
 show.legend = FALSE,
 alpha = input$pvp_trans,
 na.rm=TRUE) +
@@ -1724,8 +1732,8 @@ values$plausible_values %>% mutate(!!input$pvp_group := as.factor(.data[[input$p
 aes_string(input$pvp_xvar, "PV1")) +
 theme_minimal()
 if (input$pvp_group == "none"){
-p <- p + geom_line(stat = "summary", fun.y = "mean", colour = input$pvp_color, na.rm=TRUE)} else if (input$pvp_group != "none"){
-p <- p + geom_line(stat = "summary", fun.y = "mean", na.rm=TRUE) +
+p <- p + stat_summary(geom='line', fun = "mean", colour = input$pvp_color, na.rm=TRUE)} else if (input$pvp_group != "none"){
+p <- p + stat_summary(geom='line', fun = "mean", na.rm=TRUE) +
 aes_string(fill = input$pvp_group, colour = input$pvp_group)
 if (input$pvp_linetype == TRUE) {
 p <- p + aes_string(linetype = input$pvp_group)}}},

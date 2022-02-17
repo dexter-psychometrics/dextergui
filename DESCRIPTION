@@ -1,7 +1,7 @@
 Package: dextergui
 Type: Package
 Title: A Graphical User Interface for Dexter
-Version: 0.2.4
+Version: 0.2.5
 Authors@R: c(person("Jesse","Koops", role = c("aut", "cre"), email="jesse.koops@cito.nl"),
               person("Eva","de Schipper", role = c("aut")),
               person("Ivailo","Partchev", role = c("aut", "ctb")),
@@ -37,7 +37,7 @@ Imports:
     readxl (>= 1.1),
     writexl (>= 1.0),
     readODS (>= 1.6),
-    ggplot2 (>= 3.2),
+    ggplot2 (>= 3.3.5),
     ggExtra (>= 0.8),
     ggridges (>= 0.5.1),
     networkD3 (>= 0.4),

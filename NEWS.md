@@ -1,3 +1,7 @@
+# dextergui 0.2.5
+
+* fixes for deprecated functions in newer ggplot
+
 # dextergui 0.2.4
 
 * a new tab with DIF and subgroup analysis
@@ -33,7 +37,7 @@
 
 * slightly improved help
 * bugfix for a breaking change in shinyFiles 0.7.0
-* small change to accomodate a new ggplot2 release
+* small change to accommodate a new ggplot2 release
 
 # dextergui 0.1.3
 
