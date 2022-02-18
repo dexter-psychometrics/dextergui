@@ -283,7 +283,7 @@ generate_inputs = function(fun, id = deparse(substitute(fun)),
     arg = args[[argname]]
     if(is.function(input_type[[argname]]))
     {
-      tgs[[argname]] = input_type[[argname]](id = paste(id, argname,sep='_'), label = argname)
+      tgs[[argname]] = input_type[[argname]](inputId = paste(id, argname,sep='_'), label = argname)
     } else if(argname == 'predicate')
     {
       
@@ -291,6 +291,10 @@ generate_inputs = function(fun, id = deparse(substitute(fun)),
                                       label = 'data selection', 
                                       rows=1, resize='none', width='200px',
                                       class='predicate-with-help', inline=TRUE)
+    } else if(argname == 'covariates')
+    {
+      tgs[[argname]] = eselectInput(paste(id, argname,sep='_'), label = argname, 
+                                    choices = c('choose covariates' = ''), inline=inline,width=width,multiple=TRUE)
     } else
     {
       tgs[[argname]] = switch(input_type[[argname]],
@@ -322,7 +326,7 @@ generate_inputs = function(fun, id = deparse(substitute(fun)),
       {
         tt_id = paste(id, argname,sep='_')
       }
-      tgs[[paste0(tt_id,'tip',sep='_')]] = bsTooltip(
+      tgs[[paste(tt_id,'tip',sep='_')]] = bsTooltip(
           tt_id,
           hlp$arguments[[argname]] %>%
             gsub("'", "\\'", ., fixed=TRUE) %>%
@@ -331,7 +335,6 @@ generate_inputs = function(fun, id = deparse(substitute(fun)),
           options=list(delay=300, html=TRUE))
     }
   }
-
 
   if(with_busy){
     tgs[[paste0('go_', id)]] = withBusyIndicatorUI(go_button(paste0('go_', id), label, class = 'btn btn-primary'))

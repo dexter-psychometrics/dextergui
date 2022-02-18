@@ -182,6 +182,25 @@ tia$items %>%
 **Note:** if you spot a key error, the table of responses right under the distractor plot allows you to change the score for a response by clicking on the respective score and changing it.
 
 
+## Subgroup analysis
+
+How do different (groups of) persons achieve the same test score? To answer this question you need to first define person properties and item properties in your data. Then you can make a profile plot (on a per booklet basis).
+
+This plot of the verbal aggression set (see the included examples), shows that, controlled for the same overall verbal aggression test score, Women tend to Shout more and Men tend to Curse and Scold more (Men tend to be more verbally aggressive than Women overall, so it is not true to say that Women tend to shout more in general).
+
+![](img/profile_buttons.PNG)
+
+```{r,fig.width=5,fig.height=5,results='hide'}
+get_items(db) %>%
+  mutate(behavior2=if_else(behavior %in% c('Curse','Scold'),'Curse,Scold',behavior)) %>%
+  add_item_properties(db,.)
+
+profile_plot(db, item_property='behavior2', covariate='gender',x='Curse,Scold',main='behavior')
+
+```
+
+There is also a test for DIF at the item-pair level.
+
 ## Item Response Theory
 
 ![](img/main_bar4.PNG)
@@ -214,25 +233,6 @@ Score-ability tables lets you compute a score-to-ability transformation table fo
 ### Items
 
 After you have fitted a model, the item tabs shows the estimated parameters and a graphical item fit measure. 
-
-## Subgroup analysis
-
-How do different (groups of) persons achieve the same test score? To answer this question you need to first define person properties and item properties in your data. Then you can make a profile plot (on a per booklet basis).
-
-This plot of the verbal aggression set (see the included examples), shows that, controlled for the same overall verbal aggression test score, Women tend to Shout more and Men tend to Curse and Scold more (Men tend to be more verbally aggressive than Women overall, so it is not true to say that Women tend to shout more in general).
-
-![](img/profile_buttons.PNG)
-
-```{r,fig.width=5,fig.height=5,results='hide'}
-get_items(db) %>%
-  mutate(behavior2=if_else(behavior %in% c('Curse','Scold'),'Curse,Scold',behavior)) %>%
-  add_item_properties(db,.)
-
-profile_plot(db, item_property='behavior2', covariate='gender',x='Curse,Scold',main='behavior')
-
-```
-
-There is also a test for DIF at the item-pair level.
 
 ## Learn more
 

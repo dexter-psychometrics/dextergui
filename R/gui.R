@@ -244,6 +244,35 @@ get_ui = function()
 				        id='col-ctt-item'),
 				    style='padding:1em;'))),     
 		  value = 'ctt_pane'),
+		tabPanel('Subgroup analysis', 
+		         fluidRow(
+		           column(6,tags$h3('Profile plot'),
+		                  eselectInput('prof_booklet',label='Booklet',choices=c('choose booklet_id' = ''), inline=TRUE, width='20%'),
+		                  eselectInput('prof_item',label='Item property',choices=c('choose item property' = ''), inline=TRUE, width='20%'),
+		                  eselectInput('prof_item_xvals',label='x axis value(s)',choices=c('choose x-axis' = ''), multiple=TRUE, inline=TRUE,width='28%'),
+		                  eselectInput('prof_person', label='Person property',choices=c('choose person property' = ''), inline=TRUE,width='20%'),
+		                  tags$a(tags$i(class="fa fa-question-circle"),class="btn btn-lg", style='margin-top:-1.5em;',
+		                         `data-toggle`='collapse',`data-target`='#help-profile_plot'),
+		                  tags$div(getHelpList('profile_plot', package='dexter')$details,
+		                           class="collapse",
+		                           id='help-profile_plot', style='margin-top:1em;margin-bottom:1em;'),
+		                  plot_add_download_btn(plotOutput('prof_plot', height='600px',width='90%')), 
+		                  class="col-side-left"
+		           ),
+		           column(6,tags$h3('DIF'),
+		                  eselectInput('DIF_person', label='Person property',choices=c('choose person property' = ''), inline=TRUE, width='20%'),
+		                  eselectInput('DIF_item',label='Order axes by',choices=c('choose item property' = ''), inline=TRUE, width='20%'),
+		                  tags$a(tags$i(class="fa fa-question-circle"),class="btn btn-lg", style='margin-top:-1.5em;',
+		                         `data-toggle`='collapse',`data-target`='#help-DIF_test'),
+		                  tags$div(paste(getHelpList('DIF', package='dexter')$details,
+		                                 getHelpList('plot.DIF_stats', package='dexter')$details),
+		                           class="collapse",
+		                           id='help-DIF_test', style='margin-top:1em;margin-bottom:1em;'),
+		                  tags$p(textOutput('DIF_text')),
+		                  plot_add_download_btn(plotOutput('DIF_plot', height='600px',width='90%'))
+		           )),
+		         
+		         value='DIF_pane'),
 		tabPanel('IRT analysis',
 		  fluidRow(
   			column(
@@ -276,7 +305,7 @@ get_ui = function()
 					         dataTableOutput('person_abilities'),
 					         download_buttons('person_abilities')))),
 				tabPanel('Plausible values', value='plausible_values',
-				  wellPanel(generate_inputs(plausible_values, omit=c('dataSrc','parms','use_draw','covariates'), 
+				  wellPanel(generate_inputs(plausible_values, omit=c('dataSrc','parms','use_draw'), 
 				                            inline=TRUE,width='150px'),
 				            style='border:none;'),
 				  pvplotUI()),
@@ -320,35 +349,6 @@ get_ui = function()
 			  width=9)),
 		  value = 'enorm_pane'
 		),
-		tabPanel('Subgroup analysis', 
-		  fluidRow(
-		    column(6,tags$h3('Profile plot'),
-		      eselectInput('prof_booklet',label='Booklet',choices=c('choose booklet_id' = ''), inline=TRUE, width='20%'),
-		      eselectInput('prof_item',label='Item property',choices=c('choose item property' = ''), inline=TRUE, width='20%'),
-		      eselectInput('prof_item_xvals',label='x axis value(s)',choices=c('choose x-axis' = ''), multiple=TRUE, inline=TRUE,width='28%'),
-		      eselectInput('prof_person', label='Person property',choices=c('choose person property' = ''), inline=TRUE,width='20%'),
-		      tags$a(tags$i(class="fa fa-question-circle"),class="btn btn-lg", style='margin-top:-1.5em;',
-		             `data-toggle`='collapse',`data-target`='#help-profile_plot'),
-		      tags$div(getHelpList('profile_plot', package='dexter')$details,
-		               class="collapse",
-		               id='help-profile_plot', style='margin-top:1em;margin-bottom:1em;'),
-		      plot_add_download_btn(plotOutput('prof_plot', height='600px',width='90%')), 
-		      class="col-side-left"
-		    ),
-       column(6,tags$h3('DIF'),
-          eselectInput('DIF_person', label='Person property',choices=c('choose person property' = ''), inline=TRUE, width='20%'),
-          eselectInput('DIF_item',label='Order axes by',choices=c('choose item property' = ''), inline=TRUE, width='20%'),
-          tags$a(tags$i(class="fa fa-question-circle"),class="btn btn-lg", style='margin-top:-1.5em;',
-                 `data-toggle`='collapse',`data-target`='#help-DIF_test'),
-          tags$div(paste(getHelpList('DIF', package='dexter')$details,
-                         getHelpList('plot.DIF_stats', package='dexter')$details),
-                   class="collapse",
-                   id='help-DIF_test', style='margin-top:1em;margin-bottom:1em;'),
-          tags$p(textOutput('DIF_text')),
-          plot_add_download_btn(plotOutput('DIF_plot', height='600px',width='90%'))
-        )),
-		         
-     value='DIF_pane'),
 		tabPanel('Help', 
 		         tags$div(
 		           tags$div(

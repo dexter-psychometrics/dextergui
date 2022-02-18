@@ -7,6 +7,11 @@ if.else = function(a,b,c)
   c
 }
 
+none2null = function(x){
+  if(length(x)==1 && tolower(x)=='none') return(NULL)
+  x[tolower(x)!='none']
+} 
+
 is_integer_ = function(x) is.integer(x) || (is.numeric(x) && all(x %% 1 == 0))
 
 dropNulls = function(x) x[!vapply(x, is.null, FUN.VALUE = logical(1))]
