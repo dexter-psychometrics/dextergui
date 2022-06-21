@@ -109,7 +109,7 @@ example_db = function(name)
 
     db = start_new_project(rules, ':memory:')
     
-    raw %>%
+    raw = raw %>%
       rename(person_id = 'idstud') %>%
       mutate(inum = dense_rank(.data$item_id)) %>%
       arrange(.data$person_id, .data$inum) %>%
@@ -119,8 +119,11 @@ example_db = function(name)
       mutate(booklet_id=paste('booklet', dense_rank(.data$booklet_id))) %>%
       group_by(.data$booklet_id) %>%
       filter(n_distinct(.data$person_id)>10) %>%
-      ungroup() %>%
-      add_response_data(db, .)
+      ungroup() 
+    
+    design = distinct(raw,booklet_id,item_id)
+    
+    add_response_data(db, data=raw, design=design)
     
     add_item_properties(db, rename(ev$data.timss07.G8.RUS$iteminfo, item_id='item'))
   } else if(name=='SF12')
