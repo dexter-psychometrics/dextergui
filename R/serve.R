@@ -77,7 +77,7 @@ if(!is.null(dbpath))
 db = open_project(dbpath)
 default_reactive = list(rules = NULL, new_rules = NULL, ctt_items=NULL, ctt_booklets=NULL,
 inter_booklet = NULL, inter_plot_items = NULL, item_properties=NULL,
-import_data=NULL, import_data_long=NULL, parms=NULL, person_abl = NULL, selected_ctt_item = NULL,
+import_data=NULL, import_data_long=NULL, import_design_long=NULL, parms=NULL, person_abl = NULL, selected_ctt_item = NULL,
 person_properties=NULL, new_person_properties = NULL, abl_tables=NULL,
 abl_varinfo=NULL, oplm_preview=NULL, plausible_values=NULL,
 ctt_items_settings = list(keep_search = FALSE), 
@@ -588,11 +588,20 @@ observeEvent(input$data_file_long,{
 data_file = input$data_file_long
 values$import_data_long = if.else(is.null(data_file), NULL, read_spreadsheet(data_file$datapath)) %>%
 rename_all(tolower)})
+observeEvent(input$design_file_long,{
+design_file = input$design_file_long
+values$import_design_long = if.else(is.null(design_file), NULL, read_spreadsheet(design_file$datapath)) %>%
+rename_all(tolower)})
 output$data_preview_long = renderTable({
 req(values$import_data_long)
 values$import_data_long %>%
 slice(1:20) %>%
 mutate_if(function(x){is.numeric(x) && all(x %% 1 == 0)}, as.integer)}, caption='Response data preview (rows 1-20)')
+output$design_preview_long = renderTable({
+req(values$import_design_long)
+values$import_design_long %>%
+slice(1:20) %>% 
+mutate_if(function(x){is.numeric(x) && all(x %% 1 == 0)}, as.integer)}, caption='Design preview (rows 1-20)')
 output$show_data_unknown_rsp_long = renderUI({
 req(values$import_data_long)
 missing_col = setdiff(c('item_id', 'person_id', 'response','booklet_id'), colnames(values$import_data_long))
@@ -621,13 +630,17 @@ observeEvent(input$go_import_data_long, {
 withBusyIndicatorServer("go_import_data_long",{
 if(is.null(values$import_data_long))
 stop('no response data to import')
-add_response_data(db, values$import_data_long, auto_add_unknown_rules=TRUE)
+design = values$import_design_long
+add_response_data(db, values$import_data_long, design=design, auto_add_unknown_rules=TRUE)
 msg = tagList(
 hr(),
 tags$p(tags$i('Most recently imported:')),
 tags$p(
 tags$b('File: '),
 tags$span(basename(input$data_file_long$name))),
+tags$p(
+tags$b('Booklets: '),
+tags$span(n_distinct(values$import_data_long$booklet_id))),
 tags$p(
 tags$b('Items: '),
 tags$span(n_distinct(values$import_data_long$item_id))),
@@ -638,7 +651,9 @@ tags$p(
 tags$b('Responses: '),
 tags$span(nrow(values$import_data_long))))
 values$import_data_long = NULL
+values$import_design_long = NULL
 reset('data_file_long')
+reset('design_file_long')
 init_project()
 output$data_import_result_long = renderUI(msg)})})
 output$inter_booklets = renderDataTable({

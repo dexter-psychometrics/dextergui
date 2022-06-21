@@ -115,7 +115,7 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
     # defaults are always reset in init_project
     default_reactive = list(rules = NULL, new_rules = NULL, ctt_items=NULL, ctt_booklets=NULL,
                             inter_booklet = NULL, inter_plot_items = NULL, item_properties=NULL,
-                            import_data=NULL, import_data_long=NULL, parms=NULL, person_abl = NULL, selected_ctt_item = NULL,
+                            import_data=NULL, import_data_long=NULL, import_design_long=NULL, parms=NULL, person_abl = NULL, selected_ctt_item = NULL,
                             person_properties=NULL, new_person_properties = NULL, abl_tables=NULL,
                             abl_varinfo=NULL, oplm_preview=NULL, plausible_values=NULL,
                             ctt_items_settings = list(keep_search = FALSE), 
