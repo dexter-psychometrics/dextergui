@@ -1,7 +1,7 @@
 Package: dextergui
 Type: Package
 Title: A Graphical User Interface for Dexter
-Version: 0.2.5
+Version: 0.2.6
 Authors@R: c(person("Jesse","Koops", role = c("aut", "cre"), email="jesse.koops@cito.nl"),
               person("Eva","de Schipper", role = c("aut")),
               person("Ivailo","Partchev", role = c("aut", "ctb")),

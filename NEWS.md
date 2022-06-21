@@ -1,3 +1,7 @@
+# dexterghui 0.2.6
+
+* updates for dexter >= 1.2
+
 # dextergui 0.2.5
 
 * fixes for deprecated functions in newer ggplot
