@@ -121,7 +121,7 @@ example_db = function(name)
       filter(n_distinct(.data$person_id)>10) %>%
       ungroup() 
     
-    design = distinct(raw,booklet_id,item_id)
+    design = distinct(raw,.data$booklet_id,.data$item_id)
     
     add_response_data(db, data=raw, design=design)
     
