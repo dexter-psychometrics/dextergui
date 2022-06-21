@@ -107,7 +107,7 @@ footplot_html = function(col)
   } else if(is.numeric(col))
   {
     ds = density(col,na.rm=TRUE,n=54)
-    return(tags$td(tags$div(tags$div(class='sparkdensity', `data-min`=ds$x[1],`data-max`=ds$x[54],
+    return(tags$td(tags$div(tags$div(class='sparkdensity', `data-min`=min(ds$x),`data-max`=max(ds$x),
                                           `data-values`=paste0('[',paste0(ds$y,collapse=','),']'))),
                         style='vertical-align:bottom;'))
     

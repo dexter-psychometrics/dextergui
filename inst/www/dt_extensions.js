@@ -598,7 +598,7 @@ update_footplot = function(td, html)
 			
 		var width = me.parent().width();
 		var values = me.data('values');
-		
+	
 		var height = Math.min(width,100);
 		
 		var mn =  parseFloat(me.data('min'))
@@ -626,7 +626,7 @@ update_footplot = function(td, html)
 		{			
 			var ticks = 4;
 			
-			var canv = $('<canvas width="' + width + 'px" height="14px">').appendTo(me).get(0);
+			var canv = $('<canvas width="' + width + 'px" height="14px" style="width:100%">').appendTo(me).get(0);
 			var ctx = canv.getContext('2d');
 			ctx.lineWidth=1;
 			ctx.strokeStyle="#404040";
