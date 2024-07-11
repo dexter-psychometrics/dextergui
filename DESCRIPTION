@@ -12,7 +12,7 @@ Authors@R: c(person("Jesse","Koops", role = c("aut", "cre"), email="jesse.koops@
 Maintainer: Jesse Koops <jesse.koops@cito.nl>
 Description: Classical Test and Item analysis, 
   Item Response analysis and data management for educational and psychological tests.
-License: GPL-3
+License: LGPL-3
 URL: https://dexter-psychometrics.github.io/dexter/
 BugReports: https://github.com/dexter-psychometrics/dexter/issues
 Encoding: UTF-8
