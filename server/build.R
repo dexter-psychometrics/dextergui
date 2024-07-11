@@ -47,7 +47,7 @@ load_ = function()
 run_ = function(...)
 {
   load_()
-  do.call(dextergui, list(...)) %>% runApp(launch.browser=TRUE)
+  do.call(dextergui, list(...)) |> runApp(launch.browser=TRUE)
 }
 
 manual = function()
@@ -94,10 +94,11 @@ make_inno = function(bld = FALSE, app_dir='inno_app')
   if(dir.exists(paste0(app_dir,'/utils')))
     unlink(paste0(app_dir,'/utils'), recursive=TRUE)
 
+  options(url.method='curl')
   RInno::create_app('dexter',
     app_dir      = app_dir,
     dir_out      = 'wizard',
-    pkgs         = 'dextergui',
+    pkgs         = c('dextergui','BH'),
     user_browser = 'chrome',
     include_R    = TRUE,
     privilege = 'admin',
@@ -114,7 +115,7 @@ make_inno = function(bld = FALSE, app_dir='inno_app')
   iss = iss[!grepl('library/BH',iss,perl=TRUE)]
   write(iss,file=paste0(app_dir,'/dexter.iss'))
   
-  file.copy('./server/BH_1.69.0-1.zip', paste0(app_dir,'/bin/BH_1.69.0-1.zip'),overwrite=TRUE)
+  #file.copy('./server/BH_1.69.0-1.zip', paste0(app_dir,'/bin/BH_1.69.0-1.zip'),overwrite=TRUE)
  
   pman = readLines(paste0(app_dir,'/utils/package_manager.R'))
   pman[grepl('^applibpath', pman, perl=T)] = 
@@ -144,5 +145,4 @@ make_inno = function(bld = FALSE, app_dir='inno_app')
   
   #RInno::compile_iss()
 }
-
 

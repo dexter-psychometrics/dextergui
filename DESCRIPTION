@@ -1,7 +1,7 @@
 Package: dextergui
 Type: Package
 Title: A Graphical User Interface for Dexter
-Version: 0.2.6
+Version: 0.3.0
 Authors@R: c(person("Jesse","Koops", role = c("aut", "cre"), email="jesse.koops@cito.nl"),
               person("Eva","de Schipper", role = c("aut")),
               person("Ivailo","Partchev", role = c("aut", "ctb")),
@@ -17,7 +17,7 @@ URL: https://dexter-psychometrics.github.io/dexter/
 BugReports: https://github.com/dexter-psychometrics/dexter/issues
 Encoding: UTF-8
 Depends:
-    R (>= 3.4),
+    R (>= 4.1),
     dexter (>= 1.2.1)
 Imports:
     shiny (>= 1.3.0),

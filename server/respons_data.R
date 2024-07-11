@@ -15,11 +15,11 @@ output$show_data_unknown_rsp = renderUI({
   if(length(items) == 0)
     return(tags$b("None of the column names in your data correspond to known item_id's"))
   
-  unknown_rsp = values$import_data[,items] %>%
-    gather(key='item_id', value='response') %>%
-    mutate(response = if_else(is.na(.data$response), 'NA', as.character(.data$response))) %>%
-    distinct() %>%
-    anti_join(get_rules(db), by=c('item_id','response')) %>%
+  unknown_rsp = values$import_data[,items] |>
+    gather(key='item_id', value='response') |>
+    mutate(response = if_else(is.na(.data$response), 'NA', as.character(.data$response))) |>
+    distinct() |>
+    anti_join(get_rules(db), by=c('item_id','response')) |>
     arrange(.data$item_id, .data$response)
   
   if(nrow(unknown_rsp) == 0)
@@ -106,6 +106,8 @@ observeEvent(input$go_import_data, {
     if(booklet_id == '')
       stop('please provide a booklet_id')
     
+    print(values$import_data)
+    assign("idt", values$import_data, envir = .GlobalEnv)
     
     result = add_booklet(db, values$import_data, booklet_id = booklet_id, auto_add_unknown_rules=TRUE)
     n = nrow(values$import_data)
@@ -153,28 +155,28 @@ observeEvent(input$go_import_data, {
 
 observeEvent(input$data_file_long,{
   data_file = input$data_file_long
-  values$import_data_long = if.else(is.null(data_file), NULL, read_spreadsheet(data_file$datapath)) %>%
+  values$import_data_long = if.else(is.null(data_file), NULL, read_spreadsheet(data_file$datapath)) |>
     rename_all(tolower)
 })
 
 observeEvent(input$design_file_long,{
   design_file = input$design_file_long
-  values$import_design_long = if.else(is.null(design_file), NULL, read_spreadsheet(design_file$datapath)) %>%
+  values$import_design_long = if.else(is.null(design_file), NULL, read_spreadsheet(design_file$datapath)) |>
     rename_all(tolower)
 })
 
 
 output$data_preview_long = renderTable({
   req(values$import_data_long)
-  values$import_data_long %>%
-    slice(1:20) %>%
+  values$import_data_long |>
+    slice(1:20) |>
     mutate_if(function(x){is.numeric(x) && all(x %% 1 == 0)}, as.integer)
 }, caption='Response data preview (rows 1-20)')
 
 output$design_preview_long = renderTable({
   req(values$import_design_long)
-  values$import_design_long %>%
-    slice(1:20) %>% 
+  values$import_design_long |>
+    slice(1:20) |> 
     mutate_if(function(x){is.numeric(x) && all(x %% 1 == 0)}, as.integer)
 }, caption='Design preview (rows 1-20)')
 
@@ -201,10 +203,10 @@ output$show_data_unknown_rsp_long = renderUI({
                 style="max-height:20em; overflow-y:auto;display:inline-block;"))
     } else
     {
-      unknown_rsp = values$import_data_long%>%
-        mutate(response = if_else(is.na(.data$response), 'NA', as.character(.data$response))) %>%
-        distinct(.data$item_id, .data$response) %>%
-        anti_join(get_rules(db), by=c('item_id','response')) %>%
+      unknown_rsp = values$import_data_long|>
+        mutate(response = if_else(is.na(.data$response), 'NA', as.character(.data$response))) |>
+        distinct(.data$item_id, .data$response) |>
+        anti_join(get_rules(db), by=c('item_id','response')) |>
         arrange(.data$item_id, .data$response)
       
       if(nrow(unknown_rsp) == 0)

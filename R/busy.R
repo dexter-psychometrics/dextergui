@@ -77,4 +77,3 @@ errorFunc <- function(err, buttonId) {
   shinyjs::html(html = errMessage, selector = errElMsg)
   shinyjs::show(selector = errEl, anim = TRUE, animType = "fade")
 }
-

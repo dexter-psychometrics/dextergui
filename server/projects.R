@@ -105,7 +105,7 @@ output$oplm_dat = renderTable(
     out = data.frame(skip1 = values$oplm_preview)
   } else
   {
-    pos = pos %>% bind_rows() %>% arrange(.data$begin)
+    pos = pos |> bind_rows() |> arrange(.data$begin)
     n=nrow(pos)
     l = 0
     
@@ -119,7 +119,7 @@ output$oplm_dat = renderTable(
     }
     if(!is.na(l)) pos = add_row(pos, begin = max(pos$end)+1, name='skip.end')
     
-    pos = arrange(pos, .data$begin) %>% mutate_if(is.numeric, as.integer)
+    pos = arrange(pos, .data$begin) |> mutate_if(is.numeric, as.integer)
     
     out = list()
     
@@ -207,14 +207,14 @@ observeEvent(input$rules_file,{
   colnames(rules) = tolower(colnames(rules))
   if(length(setdiff(c('item_id','item_score','response'),colnames(rules))) == 0)
   {
-    values$new_rules = rules %>%
+    values$new_rules = rules |>
       mutate(item_score = as.integer(.data$item_score), item_id = as.character(.data$item_id), 
-             response = gsub('\\.0+$','',as.character(.data$response), perl=TRUE)) %>%
+             response = gsub('\\.0+$','',as.character(.data$response), perl=TRUE)) |>
       select(.data$item_id, .data$response, .data$item_score)
     output$rules_upload_error = renderText({''})
   } else if(length(setdiff(c('item_id','noptions','key'),colnames(rules))) == 0)
   {
-    values$new_rules = keys_to_rules(rules %>% mutate(nOptions = as.integer(.data$noptions)))
+    values$new_rules = keys_to_rules(rules |> mutate(nOptions = as.integer(.data$noptions)))
     output$rules_upload_error = renderText({''})
   } else
   {
@@ -253,7 +253,7 @@ observeEvent(input$go_import_new_rules,{
 output$rules = renderDataTable(
 {
   req(values$rules)
-  values$rules %>% 
+  values$rules |> 
      mutate(old_item_score = .data$item_score) 
 }, 
  selection = 'none', rownames = FALSE, colnames = c('item_id','response','item_score',''), 
@@ -431,18 +431,18 @@ observeEvent(input$go_import_item_contents,
     
     png = file_nms[grepl('\\.png$', file_nms, perl=TRUE)]
     
-    tibble(item_id = gsub('\\.png$','',basename(png), perl=TRUE),
-           item_screenshot = sapply(png, function(fn){
-             base64Encode(readBin(fn, "raw", file.info(fn)[1, "size"]), "txt")}, simplify=TRUE)) %>%
-      add_item_properties(db, .)
+    add_item_properties(db,
+      tibble(item_id = gsub('\\.png$','',basename(png), perl=TRUE),
+             item_screenshot = sapply(png, function(fn){
+             base64Encode(readBin(fn, "raw", file.info(fn)[1, "size"]), "txt")}, simplify=TRUE)))
     
     
     htm = file_nms[grepl('\\.html?$', file_nms, perl=TRUE)]
     
-    tibble(item_id = gsub('\\.png$','',basename(htm), perl=TRUE),
-           item_html = sapply(htm, function(fn){
-             readChar(fn, file.info(fn)[1, "size"])}, simplify=TRUE)) %>%
-      add_item_properties(db, .)
+    add_item_properties(db,
+      tibble(item_id = gsub('\\.png$','',basename(htm), perl=TRUE),
+             item_html = sapply(htm, function(fn){
+             readChar(fn, file.info(fn)[1, "size"])}, simplify=TRUE)))
     
 
     unlink(td)
@@ -547,6 +547,5 @@ observeEvent(input$go_import_new_personprop,
                               message=list(data = list(variables = get_variables(db))))
   })
 })
-
 
 

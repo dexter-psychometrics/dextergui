@@ -44,7 +44,7 @@ output$design_plot = renderForceNetwork(
 
     tri = upper.tri(wm)
     links = tibble(source = rep(1:ncol(wm)-1L,nrow(wm))[tri], target = rep(1:ncol(wm)-1L,each=nrow(wm))[tri], 
-                   value = as.vector(wm[tri])) %>% 
+                   value = as.vector(wm[tri])) |> 
       filter(value>0)
     nodes = tibble(name=colnames(wm), group = 1:ncol(wm))
     
@@ -55,9 +55,9 @@ output$design_plot = renderForceNetwork(
                              testlet = max(design$testlets$testlet)+1L))
     colnames(nodes) = c('name','group')
     n_itm = n_distinct(design$design$item_id)
-    links = design$design %>%
-      arrange(.data$booklet_id,.data$item_id) %>%
-      mutate(source = dense_rank(.data$item_id) - 1L, target = dense_rank(.data$booklet_id) -1L + n_itm) %>%
+    links = design$design |>
+      arrange(.data$booklet_id,.data$item_id) |>
+      mutate(source = dense_rank(.data$item_id) - 1L, target = dense_rank(.data$booklet_id) -1L + n_itm) |>
       select(.data$source, .data$target)
     
     
@@ -83,10 +83,7 @@ output$fit_enorm_result = renderUI(
         tags$tr(tags$th('method: '), tags$td(x$inputs$method)),
         if.else(x$inputs$method == 'CML', 
           tags$tr(tags$th('iterations: '), tags$td(x$est$n_iter)),
-          tags$tr(tags$th('Gibbs samples: '), tags$td(nrow(x$est$beta.cml)))),
-        if.else(x$xpr != 'NULL',
-                tags$tr(tags$th('selection: '), tags$td(x$xpr)),
-                ''),
+          tags$tr(tags$th('Gibbs samples: '), tags$td(nrow(x$est$beta)))),
         tags$tr(tags$th('items:'), tags$td(nrow(x$inputs$ssI))),
         tags$tr(tags$th('responses: '), tags$td(sum(x$inputs$ssIS$sufI))))))
 })
@@ -151,9 +148,9 @@ enorm_coef_table = reactive({
     cf
   } else
   {
-    cf %>%
-      gather('var','val', 3:4 ) %>%
-      unite('temp', .data$var, .data$item_score) %>%
+    cf |>
+      gather('var','val', 3:4 ) |>
+      unite('temp', .data$var, .data$item_score) |>
       spread(.data$temp, .data$val)
   }
 })
@@ -164,7 +161,7 @@ output$enorm_coef = renderDataTable(
 {
   req(enorm_coef_table())
 
-  cf = enorm_coef_table() %>% 
+  cf = enorm_coef_table() |> 
     mutate_if(is.numeric, round, digits=3)
   
   selected=1
@@ -269,4 +266,3 @@ output$enorm_slider_download = downloadHandler(
   },
   contentType = "image/png"
 )
-

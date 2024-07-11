@@ -71,17 +71,17 @@ footplot_html = function(col)
   if(inherits(col,'character') || (is.integer(col) && n_distinct(col)<=6))
   {
     # horizontal hist
-    vt = tibble(v = trimws(col)) %>%
-      group_by(.data$v) %>%
-      summarise(n=n()) %>%
-      ungroup() %>%
+    vt = tibble(v = trimws(col)) |>
+      group_by(.data$v) |>
+      summarise(n=n()) |>
+      ungroup() |>
       arrange(desc(n))
     
     if(sum(vt$n[1:5],na.rm=TRUE) >= length(col)/2)
     {
       if(nrow(vt) > 6)
       {
-        vt = slice(vt,1:5) %>% add_row(v='other', n=sum(vt$n[6:nrow(vt)]))
+        vt = slice(vt,1:5) |> add_row(v='other', n=sum(vt$n[6:nrow(vt)]))
       }
       mx = sum(vt$n)
       

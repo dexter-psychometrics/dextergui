@@ -9,12 +9,12 @@ observe({
 observe({
   req(input$prof_booklet, values$person_properties)
 
-  items = get_items(db) %>%
-    inner_join(get_design(db), by='item_id') %>%
-    filter(booklet_id == input$prof_booklet) %>%
+  items = get_items(db) |>
+    inner_join(get_design(db), by='item_id') |>
+    filter(booklet_id == input$prof_booklet) |>
     select(-.data$item_id)
   
-  iprop = tibble(name=colnames(items), n = sapply(items, n_distinct)) %>%
+  iprop = tibble(name=colnames(items), n = sapply(items, n_distinct)) |>
     filter(between(.data$n, 2, nrow(items)/2))
   
   updateSelectInput(session, 'prof_item', choices = iprop$name)
@@ -22,14 +22,14 @@ observe({
   
   if(ncol(values$person_properties)>1)
   {
-    persons = values$person_properties %>%
+    persons = values$person_properties |>
       semi_join(dbGetQuery(db,
                            'SELECT person_id FROM dxadministrations WHERE booklet_id=:booklet;', 
                            list(booklet=input$prof_booklet)),
-                by='person_id') %>%
+                by='person_id') |>
       select(-.data$person_id)
     
-    pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) %>%
+    pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) |>
       filter(between(.data$n, 2, 3))
     
     updateSelectInput(session, 'prof_person', choices = pprop$name)
@@ -40,10 +40,10 @@ observe({
 prof_item_prop_vals = reactive({
   req(input$prof_booklet, input$prof_item)
   
-  get_items(db) %>%
-    inner_join(get_design(db), by='item_id') %>%
-    filter(booklet_id == input$prof_booklet) %>%
-    pull(.data[[input$prof_item]]) %>%
+  get_items(db) |>
+    inner_join(get_design(db), by='item_id') |>
+    filter(booklet_id == input$prof_booklet) |>
+    pull(.data[[input$prof_item]]) |>
     unique()
 })
 
@@ -72,8 +72,8 @@ output$prof_plot = renderPlot({
   if(nvals != 2)
   {
     prop = tibble(val = prof_item_prop_vals(),
-                  g = .data$val %in% input$prof_item_xvals) %>%
-      group_by(.data$g) %>%
+                  g = .data$val %in% input$prof_item_xvals) |>
+      group_by(.data$g) |>
       mutate(p = paste(.data$val, collapse=','))
 
     dat = inner_join(prop, dat, by=c('val'=input$prof_item))
@@ -115,8 +115,8 @@ output$prof_plot_download = downloadHandler(
     if(nvals != 2)
     {
       prop = tibble(val = prof_item_prop_vals(),
-                    g = .data$val %in% input$prof_item_xvals) %>%
-        group_by(.data$g) %>%
+                    g = .data$val %in% input$prof_item_xvals) |>
+        group_by(.data$g) |>
         mutate(p = paste(.data$val, collapse=','))
       
       dat = inner_join(prop, dat, by=c('val'=input$prof_item))
@@ -153,7 +153,7 @@ observe({
   {
     persons = select(values$person_properties, -.data$person_id)
     
-    pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) %>%
+    pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) |>
       filter(.data$n==2)
     
     updateSelectInput(session, 'DIF_person', choices = pprop$name, selected = pprop$name[1])
@@ -171,8 +171,8 @@ output$DIF_plot = renderPlot({
   items=NULL
   if(input$DIF_item != 'item_id')
   {
-    items = get_items(db) %>%
-      arrange(.data[[input$DIF_item]]) %>%
+    items = get_items(db) |>
+      arrange(.data[[input$DIF_item]]) |>
       pull(.data$item_id)
   }
   plot(DIF_object(), items=items, cex.axis=1)
@@ -193,8 +193,8 @@ output$DIF_plot_download = downloadHandler(
     items=NULL
     if(input$DIF_item != 'item_id')
     {
-      items = get_items(db) %>%
-        arrange(.data[[input$DIF_item]]) %>%
+      items = get_items(db) |>
+        arrange(.data[[input$DIF_item]]) |>
         pull(.data$item_id)
     }
     

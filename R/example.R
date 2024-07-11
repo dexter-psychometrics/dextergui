@@ -97,28 +97,28 @@ example_db = function(name)
         {
           as.character(factor(col, lab, names(lab)))
         }
-      }) %>%
-        as_tibble() %>%
-        gather(key='item_id', value='response', -.data$idstud, na.rm=TRUE) %>%
+      }) |>
+        as_tibble() |>
+        gather(key='item_id', value='response', -.data$idstud, na.rm=TRUE) |>
         mutate(response = if_else(is.na(.data$response), '', .data$response))
       
-    rules = as_tibble(ev$data.timss07.G8.RUS$scored) %>%
-      gather(key='item_id', value='item_score', -.data$idstud, na.rm=TRUE) %>%
-      inner_join(raw,by=c('idstud','item_id')) %>%
+    rules = as_tibble(ev$data.timss07.G8.RUS$scored) |>
+      gather(key='item_id', value='item_score', -.data$idstud, na.rm=TRUE) |>
+      inner_join(raw,by=c('idstud','item_id')) |>
       distinct(.data$item_id, .data$response, .data$item_score)
 
     db = start_new_project(rules, ':memory:')
     
-    raw = raw %>%
-      rename(person_id = 'idstud') %>%
-      mutate(inum = dense_rank(.data$item_id)) %>%
-      arrange(.data$person_id, .data$inum) %>%
-      group_by(.data$person_id) %>%
-      mutate(booklet_id=paste(.data$inum,collapse=' ')) %>%
-      ungroup() %>%
-      mutate(booklet_id=paste('booklet', dense_rank(.data$booklet_id))) %>%
-      group_by(.data$booklet_id) %>%
-      filter(n_distinct(.data$person_id)>10) %>%
+    raw = raw |>
+      rename(person_id = 'idstud') |>
+      mutate(inum = dense_rank(.data$item_id)) |>
+      arrange(.data$person_id, .data$inum) |>
+      group_by(.data$person_id) |>
+      mutate(booklet_id=paste(.data$inum,collapse=' ')) |>
+      ungroup() |>
+      mutate(booklet_id=paste('booklet', dense_rank(.data$booklet_id))) |>
+      group_by(.data$booklet_id) |>
+      filter(n_distinct(.data$person_id)>10) |>
       ungroup() 
     
     design = distinct(raw,.data$booklet_id,.data$item_id)
@@ -130,14 +130,14 @@ example_db = function(name)
   {
     ev = new_environment()
     data('SF12', package='MLCIRTwithin', envir=ev)
-    rules = select(ev$SF12, -.data$age) %>%
-      gather(key='item_id', value='response') %>%
-      mutate(item_score = if_else(is.na(.data$response),0L,as.integer(.data$response))) %>%
+    rules = select(ev$SF12, -.data$age) |>
+      gather(key='item_id', value='response') |>
+      mutate(item_score = if_else(is.na(.data$response),0L,as.integer(.data$response))) |>
       distinct()
     
     db = start_new_project(rules, ':memory:', person_properties=list(age = as.double(NA)))
     
-    add_booklet(db, ev$SF12 %>% mutate(age=round(.data$age,1)), 'Sf12')
+    add_booklet(db, ev$SF12 |> mutate(age=round(.data$age,1)), 'Sf12')
     
     add_item_properties(db,tibble(
       item_id=paste0('Y',1:12),
@@ -152,9 +152,9 @@ example_db = function(name)
   {
     ev = new_environment()
     data('RLMS', package='MLCIRTwithin', envir=ev)
-    rules = select(ev$RLMS, starts_with('Y')) %>%
-      gather(key='item_id', value='response') %>%
-      mutate(item_score = if_else(is.na(.data$response),0L,as.integer(.data$response))) %>%
+    rules = select(ev$RLMS, starts_with('Y')) |>
+      gather(key='item_id', value='response') |>
+      mutate(item_score = if_else(is.na(.data$response),0L,as.integer(.data$response))) |>
       distinct()
     
     db = start_new_project(rules, ':memory:', 
@@ -169,4 +169,3 @@ example_db = function(name)
   
   db
 }
-

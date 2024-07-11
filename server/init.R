@@ -22,7 +22,7 @@ init_project = function()
   for(nm in names(default_reactive)){ values[[nm]] = default_reactive[[nm]] }
   
   rules = get_rules(db)
-  persons = get_persons(db) %>% mutate_if(is_integer_, as.integer)
+  persons = get_persons(db) |> mutate_if(is_integer_, as.integer)
   values$rules = rules
   items = as_tibble(get_items(db))
   values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
@@ -48,14 +48,13 @@ init_project = function()
     tia = tia_tables(data, type='raw')
     
     # don't need to make distinct by person since nbr of items is equal within booklet
-    sparks = data$x %>%
-      group_by(.data$booklet_id) %>%
-      summarise(test_score = sparkbox_vals(.data$booklet_score)) %>%
-      ungroup() %>%
+    sparks = data$x |>
+      group_by(.data$booklet_id) |>
+      summarise(test_score = sparkbox_vals(.data$booklet_score)) |>
+      ungroup() |>
       mutate(booklet_id = as.character(.data$booklet_id))
     
-    tia$booklets = tia$booklets %>%
-      mutate_if(is.double, round, digits=3) %>% 
+    tia$booklets = tia$booklets |>
       inner_join(sparks, by='booklet_id')
     
     if(all(grepl('^\\d+$',tia$booklets$booklet_id)))

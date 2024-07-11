@@ -18,6 +18,67 @@ header = function()
 }
 
 
+plotUI = function(w=c('pvp','abp'))
+{
+  w = match.arg(w)
+  id = function(i) sprintf('%s_%s',w,i)
+  
+  tagList(
+    fluidRow(
+      column(width = 12,
+             imgSelect(id("plotbar")))
+    ),
+    fluidRow(
+      br(),
+      column(width = 8,
+             tags$style(type = "text/css",
+                        ".shiny-output-error { visibility: hidden; }",
+                        ".shiny-output-error:before { visibility: hidden; }"),
+             plotOutput(outputId = id("plot"))
+      ),
+      column(width = 4,
+             hidden(selectInput(inputId = id("group"), label = "Grouping Variable", choices=c('none'), width='100%')),
+             if(w=='pvp'){hidden(selectInput(inputId = id("weight"), label = "Weight by", choices=c('none'), width='100%'))},
+             hidden(multiToggleButton(id = id('stackfacet'),
+                                      choices = c(stacked= 'Stacked', facetted='Facetted', joy='Joy'), selected = 'stacked')),
+             hidden(selectInput(inputId = id("xvar"), label = "x-variable",
+                                choices = c(), width='100%')),
+             hidden(checkboxInput(inputId = id("fill"), label = "Fill", value = TRUE)),
+             hidden(checkboxInput(inputId = id("grid"), label = "Grid", value = TRUE)),
+             hidden(tags$input(id = id("color"), type = 'color', value = '#4DAF4A', style = 'width:5em;', class = 'shiny-color-picker')),
+             hidden(checkboxInput(inputId = id("linetype"), label = "Varying line types", value = FALSE)),
+             hidden(sliderInput(inputId = id("bins"), label = "Number of bins",
+                                min = 5, max = 60, value = 30, step = 1, round = TRUE, ticks = FALSE, width='100%')),
+             hidden(sliderInput(inputId = id("trans"), label = "Transparency",
+                                min = 0.2, max = 1, value = 0.5, step = 0.05, ticks = FALSE, width='100%')),
+             hidden(checkboxInput(inputId = id("err"), label = "Error Bars")),
+             hidden(checkboxInput(inputId = id("dodge"), label = "Dodge")),
+             hidden(checkboxInput(inputId = id("marg"), label = "Marginal plots")),
+             hidden(eCheckboxGroupInput(inputId = id("fitlines"), label = '', choices=c("Fitline(s)"='fitlines',"se"),
+                                        inline=FALSE, direction='horizontal')),
+             hidden(textInput(inputId = id("main"),
+                              label = "Title", width='100%')), 
+             fluidRow(
+               column(width = 6,
+                      hidden(textInput(inputId = id("xlab"),
+                                       label = "Label x-axis"))),
+               column(width = 6,
+                      hidden(textInput(inputId = id("ylab"),
+                                       label = "Label y-axis")))
+             ),
+             
+             conditionalPanel(
+               condition = "$('#pvp_plotbar img').length > 0", 
+               tags$h4('Save plot'),
+               tagAppendAttributes(numericInput(id('download_width'), 'Width (cm)', value = 14, min = 2, max = 50, 
+                                                width='6em'),style='display:inline-block;'),
+               tagAppendAttributes(numericInput(id('download_height'), 'Height (cm)', value=8, min = 2, max = 50, 
+                                                width='6em'),style='display:inline-block;'),
+               downloadButton(id('download'), 'Download'))
+      )
+    ))
+}
+
 get_ui = function()
 {
 	tagList(header(),		
@@ -75,7 +136,7 @@ get_ui = function()
         		      tags$b('1) Scoring rules per response'),
         		      tags$p('A csv or excel file with columns item_id, response and item_score with a separate row for each item-response combination',
         		             style="padding:5px;"),
-    		          df2html(data.frame(item_id = c('S1DoCurse', 'S1DoScold'), response = c(0,0,1,1,2,2), item_score = c(0,0,1,1,2,2)) %>%
+    		          df2html(data.frame(item_id = c('S1DoCurse', 'S1DoScold'), response = c(0,0,1,1,2,2), item_score = c(0,0,1,1,2,2)) |>
         		                arrange(.data$item_id, .data$response),
         		              class="min-table", style="margin-bottom:16px;"),
       		        tags$b('2) Keys'),
@@ -304,8 +365,7 @@ get_ui = function()
 				                            inline=TRUE,width='120px'),
 				            style='border:none;'),
 				  tabsetPanel(type='tabs',
-					tabPanel('plots', abplotUI()
-					         ),
+					tabPanel('plots', plotUI('abp')),
 					tabPanel('data',
 					         tags$br(),
 					         dataTableOutput('person_abilities'),
@@ -313,8 +373,7 @@ get_ui = function()
 				tabPanel('Plausible values', value='plausible_values',
 				  wellPanel(generate_inputs(plausible_values, omit=c('dataSrc','parms','use_draw'), 
 				                            inline=TRUE,width='150px'),
-				            style='border:none;'),
-				  pvplotUI()),
+				            style='border:none;'),plotUI('pvp')),
 				tabPanel('Score-ability tables', value='ability_tables',
 				  wellPanel(generate_inputs(ability_tables, omit=c('parms','design','standard_errors','npv'), 
 				                            input_type=list(use_draw='numeric'),inline=TRUE, width='120px'),
@@ -363,5 +422,3 @@ get_ui = function()
 		           class='help-page-outer'))
 		))
 }
-
-

@@ -73,8 +73,8 @@ In both cases the first row must contain the exact column names. Below you see e
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 
-data.frame(item_id = c('S1DoCurse', 'S1DoScold'), response = c(0,0,1,1,2,2), item_score = c(0,0,1,1,2,2)) %>%
-  arrange(item_id, response) %>%
+data.frame(item_id = c('S1DoCurse', 'S1DoScold'), response = c(0,0,1,1,2,2), item_score = c(0,0,1,1,2,2)) |>
+  arrange(item_id, response) |>
   kable(caption='Standard format, suitable for polytomous and mc items')
 
 ```
@@ -83,7 +83,7 @@ data.frame(item_id = c('S1DoCurse', 'S1DoScold'), response = c(0,0,1,1,2,2), ite
 
 ```{r, echo=FALSE, out.extra='style="float:left;"'}
 
-data.frame(item_id = c('mcItem_1', 'mcItem_2','mcItem_3'), nOptions = c(3,4,3), key=c('C','A','A')) %>%
+data.frame(item_id = c('mcItem_1', 'mcItem_2','mcItem_3'), nOptions = c(3,4,3), key=c('C','A','A')) |>
   kable(caption='Alternative format, only suitable for mc items')
 
 ```
@@ -106,7 +106,7 @@ Response data is imported one booklet at a time. First provide a unique name for
 The column names should be item id's which each have an exact match to the item id's in your scoring rules, note that capitalization matters. You can also include person properties like grade or study program. It is also good practice (but not mandatory) to include a column <i>person_id</i> with a unique identification of each person in your data. Each row in your data, apart from the column names, should represent a single person like in the example below. 
 
 ```{r, echo=FALSE}
-verbAggrData[1:8,1:8] %>%
+verbAggrData[1:8,1:8] |>
   kable(caption="example response data for the verbal aggression dataset (Vansteelandt, 2000)")
 ```
 
@@ -148,8 +148,8 @@ tia=tia_tables(db)
 ```
 
 ```{r}
-tia$booklets %>%
-  mutate_if(is.double, round, digits=3) %>%
+tia$booklets |>
+  mutate_if(is.double, round, digits=3) |>
   kable()
 ```
 
@@ -168,9 +168,9 @@ The Rasch model fits this item very well, so the two curves practically coincide
 The items tab shows classical statistics for the items on the left, including RiT, RiR and pvalue.
 
 ```{r}
-tia$items %>%
-  slice(1:10) %>%
-  mutate_if(is.double, round, digits=3) %>%
+tia$items |>
+  slice(1:10) |>
+  mutate_if(is.double, round, digits=3) |>
   kable()
 ```
 
@@ -191,9 +191,10 @@ This plot of the verbal aggression set (see the included examples), shows that, 
 ![](img/profile_buttons.PNG)
 
 ```{r,fig.width=5,fig.height=5,results='hide'}
-get_items(db) %>%
-  mutate(behavior2=if_else(behavior %in% c('Curse','Scold'),'Curse,Scold',behavior)) %>%
-  add_item_properties(db,.)
+ii = get_items(db) |>
+  mutate(behavior2=if_else(behavior %in% c('Curse','Scold'),'Curse,Scold',behavior))
+
+add_item_properties(db,ii)
 
 profile_plot(db, item_property='behavior2', covariate='gender',x='Curse,Scold',main='behavior')
 

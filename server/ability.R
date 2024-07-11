@@ -160,7 +160,7 @@ output$abl_tables_csv_download = downloadHandler(
 
 
 # selectize input needs to be debounced since changes happen too quickly
-abl_tables_plot_booklet = reactive({input$abl_tables_plot_booklet}) %>% debounce(300)
+abl_tables_plot_booklet = reactive({input$abl_tables_plot_booklet}) |> debounce(300)
 
 
 abl_tables_plot = reactive({
@@ -168,7 +168,7 @@ abl_tables_plot = reactive({
 
   booklets = abl_tables_plot_booklet()
   
-  abl = filter(values$abl_tables, is.finite(.data$theta)) %>%
+  abl = filter(values$abl_tables, is.finite(.data$theta)) |>
     inner_join(tibble(booklet_id = booklets), by='booklet_id') 
   
   xmin = floor(min(abl$theta))
@@ -182,25 +182,25 @@ abl_tables_plot = reactive({
   
   # to do: search all code for bklist, it does not exist anymore
   
-  # scoretab = values$parms$inputs$bkList[abl_tables_plot_booklet()] %>%
-  #   lapply(function(bk){ tibble(booklet_score=0:(length(bk$scoretab)-1), n=bk$scoretab)} ) %>%
+  # scoretab = values$parms$inputs$bkList[abl_tables_plot_booklet()] |>
+  #   lapply(function(bk){ tibble(booklet_score=0:(length(bk$scoretab)-1), n=bk$scoretab)} ) |>
   #   bind_rows(.id = 'booklet_id')
 
-  abl = abl %>%
+  abl = abl |>
     inner_join(values$parms$inputs$scoretab, by=c('booklet_id','booklet_score'))
   
   #make a histogram, 31 bins, from weighted data, range xmin,xmax
   offs = (xmax-xmin)/62
   mids = seq(xmin+offs,xmax-offs,length.out=30)
-  hist_counts = abl %>%
-    group_by(.data$theta) %>%
-    mutate(x = which.min(abs(mids - .data$theta[1]))) %>%
-    ungroup() %>%
-    group_by(.data$x) %>%
-    summarize(y = sum(.data$N)) %>%
-    ungroup() %>%
-    right_join(tibble(x=1:31), by='x') %>%
-    mutate(y = coalesce(.data$y,0L)) %>%
+  hist_counts = abl |>
+    group_by(.data$theta) |>
+    mutate(x = which.min(abs(mids - .data$theta[1]))) |>
+    ungroup() |>
+    group_by(.data$x) |>
+    summarize(y = sum(.data$N)) |>
+    ungroup() |>
+    right_join(tibble(x=1:31), by='x') |>
+    mutate(y = coalesce(.data$y,0L)) |>
     arrange(.data$x)
   
   par(mar = c(5,4,3,4))
@@ -284,6 +284,4 @@ output$abl_tables_plot_ti_hinf = renderUI({
                   "border: 1px solid ", colr[booklet_id], "; border-radius:2px;")
 
   tags$div(booklet_id, style=style)
-
-
 })

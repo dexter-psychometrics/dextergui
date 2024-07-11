@@ -26,25 +26,6 @@ qcolors = function(n)
   rep_len(pal,n)
 }
 
-# get_palettes = function(category=c('qual','div','seq','all'), max_colors = 100)
-# {
-#   ctg = match.arg(category)
-#   if(category == 'all')
-#   {
-#     pal = brewer.pal.info %>% mutate_if(is.factor, as.character) %>% add_column(name = rownames(brewer.pal.info))
-#   } else
-#   {
-#     pal = brewer.pal.info %>% mutate_if(is.factor, as.character) %>% add_column(name = rownames(brewer.pal.info))  %>% 
-#       filter(.data$category == ctg)
-#   }
-#   
-#   pal = split(pal, pal$name)
-#   
-#   lapply(pal, function(p){
-#     paste(p$name,paste(brewer.pal(min(p$maxcolors, max_colors), p$name), collapse=' '), sep=';')
-#   } )
-# }
-
 resp_data_bkl = function(rsp, bkl)
 {
   rsp$x = filter(rsp$x, .data$booklet_id == bkl)
@@ -154,8 +135,8 @@ ctt_items_table = function(items, averaged)
 {
   if(averaged)
   {
-    items = items %>% 
-      group_by(.data$item_id) %>% 
+    items = items |> 
+      group_by(.data$item_id) |> 
       summarise(n_booklets = n(), 
                 w_mean_score = weighted.mean(.data$mean_score, w = .data$n_persons, na.rm = TRUE), 
                 sd_score = sqrt(combined_var(.data$mean_score, .data$sd_score^2, .data$n_persons)),
@@ -163,15 +144,12 @@ ctt_items_table = function(items, averaged)
                 pvalue = weighted.mean(.data$pvalue, w = .data$n_persons, na.rm = TRUE), 
                 rit = weighted.mean(.data$rit, w = .data$n_persons, na.rm = TRUE), 
                 rir = weighted.mean(.data$rir, w = .data$n_persons, na.rm = TRUE), 
-                n_persons = sum(.data$n_persons)) %>%
-      ungroup() %>%
+                n_persons = sum(.data$n_persons)) |>
+      ungroup() |>
       rename(mean_score = .data$w_mean_score)
   }
   
-  items %>%
-    mutate(pvalue = round(.data$pvalue,3), rit = round(.data$rit,3), rir = round(.data$rir,3),
-          mean_score = round(.data$mean_score,2), sd_score = round(.data$sd_score,2))
-
+  items
 }
 
 
@@ -242,10 +220,10 @@ guess_csv_format = function(txt, delim = c('|',';',',','\t'))
   out = list(stringsAsFactors = FALSE, dec='.', quote = "\"'")
   # first guess quote
   # assumes doubling quote character to escape
-  dbl_q = gregexpr('"', txt, fixed = TRUE) %>%
+  dbl_q = gregexpr('"', txt, fixed = TRUE) |>
     sapply(function(ps) if.else(length(ps) %% 2 != 0, -1, min(ps)))
   
-  sngl_q = gregexpr("'", txt, fixed = TRUE) %>%
+  sngl_q = gregexpr("'", txt, fixed = TRUE) |>
     sapply(function(ps) if.else(length(ps) %% 2 != 0, -1, min(ps)))
   
   
@@ -263,7 +241,7 @@ guess_csv_format = function(txt, delim = c('|',';',',','\t'))
     txt = gsub(paste0(out$quote,'[^',out$quote,']*', out$quote),'',txt,perl=TRUE)
   }
 
-  delim = sapply(delim, function(dl) nchar(txt) - nchar( gsub(dl, "", txt,fixed=TRUE)), simplify=FALSE) %>%
+  delim = sapply(delim, function(dl) nchar(txt) - nchar( gsub(dl, "", txt,fixed=TRUE)), simplify=FALSE) |>
     sapply(unique, simplify=FALSE)
   
   delim = delim[sapply(delim, length) == 1 & sapply(delim, min) > 0]
@@ -352,8 +330,3 @@ readSCR = function (file)
        responses_start = fmt[3], response_length = fmt[5],
        expanded = expanded)
 }
-
-
-
-
-

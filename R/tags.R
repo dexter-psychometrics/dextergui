@@ -32,6 +32,22 @@ plot_add_download_btn = function(plt)
   tags$div(plt, btn, style='position:relative')
 }
 
+eCheckboxGroupInput = function(inputId,label, ..., inline=FALSE, direction=c('vertical','horizontal'))
+{
+  direction = match.arg(direction)
+  args = list(...)
+  args$inputId = inputId
+  args$label = label
+  args$inline = direction == 'horizontal'
+  
+  x = do.call(checkboxGroupInput, args)
+  
+  if(!inline && args$inline)
+  {
+    x$attribs$class = trimws(gsub('[^ ]*inline[^ ]*','',x$attribs$class,perl=TRUE))
+  }
+  x
+}
 
 
 # editable also implies readable
@@ -236,7 +252,12 @@ updateRangeInput = function(session, inputId,  value = NULL,
                      value = value[2],min = min, max = max, step = step)
 }
 
-
+clean_help_text = function(x)
+{
+  x = gsub("'", "\\'", x, fixed=TRUE)
+  x = gsub('\n',' ', x)
+  gsub('NULL', 'empty', x, fixed=TRUE) 
+}
 
 # generate a set of input tags and an execute button for an R function
 #
@@ -328,10 +349,7 @@ generate_inputs = function(fun, id = deparse(substitute(fun)),
       }
       tgs[[paste(tt_id,'tip',sep='_')]] = bsTooltip(
           tt_id,
-          hlp$arguments[[argname]] %>%
-            gsub("'", "\\'", ., fixed=TRUE) %>%
-            gsub('\n',' ', .) %>%
-            gsub('NULL', 'empty', ., fixed=TRUE),
+          clean_help_text(hlp$arguments[[argname]]) ,
           options=list(delay=300, html=TRUE))
     }
   }
@@ -539,6 +557,3 @@ dt_foot_summary = function(df)
   }
   
 }
-
-
-

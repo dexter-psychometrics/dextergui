@@ -37,8 +37,8 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
   if(Sys.info()["sysname"] == 'Windows')
   {
     restricted = tibble(name = trimws(system("wmic logicaldisk get Caption", intern = TRUE)),
-                        size = trimws(system("wmic logicaldisk get Size", intern = TRUE))) %>%
-      filter(!grepl('^\\d+$',.data$size,perl=TRUE) & !(.data$name %in% c('Caption',''))) %>%
+                        size = trimws(system("wmic logicaldisk get Size", intern = TRUE))) |>
+      filter(!grepl('^\\d+$',.data$size,perl=TRUE) & !(.data$name %in% c('Caption',''))) |>
       pull(.data$name)
     
     if(length(restricted)==0)
@@ -200,7 +200,7 @@ observeEvent(input$quit_application,{
       
 ++ability.R++
 
-++abplot.R++      
+++ability_plots.R++      
   
 ++plausible_values.R++  
 
@@ -213,4 +213,3 @@ observeEvent(input$quit_application,{
   
   shinyApp(get_ui(), server)
 }
-

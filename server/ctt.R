@@ -6,7 +6,7 @@ output$inter_booklets = renderDataTable({
   cdef = list(list(targets = ncol(values$ctt_booklets)-1, 
                    render = JS("function(data, type, full){ return '<span class=\"sparkbox\">' + data + '</span>' }")),
               list(className = "numeric", targets = list(7)),
-              list(className = "dec-3", targets = list(2,3,4,5)))
+              list(className = "dec-2", targets = list(2,3,4,5)))
   
   drawcallback = init_sparks(.box = list(chartRangeMin = 0, chartRangeMax = max(values$ctt_booklets$max_booklet_score)),
                              add_js='dt_numcol(settings);')
@@ -19,7 +19,7 @@ output$inter_booklets = renderDataTable({
     }
   })
   
-  datatable({ values$ctt_booklets}, 
+  datatable({ mutate_if(values$ctt_booklets, is.double,round,digits=2)}, 
             rownames = FALSE, selection = list(mode = 'single', selected = selected), 
             class='compact', extensions = 'Buttons',
             options = list(columnDefs = cdef, fnDrawCallback = drawcallback,
@@ -133,7 +133,8 @@ output$interslider_download = downloadHandler(
 output$ctt_items = renderDataTable(
 {
   req(values$ctt_items)
-  data = ctt_items_table(values$ctt_items, input$ctt_items_averaged)
+  data = ctt_items_table(values$ctt_items, input$ctt_items_averaged) |>
+    mutate_if(is.double,round,digits=2)
   selected = 1
   search_ = ""
 
@@ -156,8 +157,7 @@ output$ctt_items = renderDataTable(
                    search = list(search = search_, smart=FALSE),
                    pageLength = 20, scrollX = TRUE,
                    columnDefs = list(list(className = "numeric", targets = list(8)),
-                                     list(className = "dec-3", targets = list(5,6,7)),
-                                     list(className = "dec-2", targets = list(2,3))),
+                                     list(className = "dec-2", targets = list(2,3,5,6,7))),
                    fnDrawCallback = JS('dt_numcol'),
                    initComplete = JS(paste0(
                                       'function(dtsettings){
@@ -244,8 +244,8 @@ distr_plot = function(update_legend=TRUE)
   } else
   {
     isolate({
-      booklets = values$ctt_items %>% 
-        filter(.data$item_id==!!item_id & .data$n_persons>1) %>%
+      booklets = values$ctt_items |> 
+        filter(.data$item_id==!!item_id & .data$n_persons>1) |>
         pull(.data$booklet_id)
      })
     
@@ -289,7 +289,7 @@ output$item_viewer = renderUI({
   req(values$selected_ctt_item)
 
 
-  item = dbGetQuery(db, 'SELECT * FROM dxItems WHERE item_id=:item_id;', list(item_id=values$selected_ctt_item$item_id)) %>%
+  item = dbGetQuery(db, 'SELECT * FROM dxItems WHERE item_id=:item_id;', list(item_id=values$selected_ctt_item$item_id)) |>
     select_if(function(x) !is.na(x))
   
   if('item_html' %in% colnames(item))
@@ -315,8 +315,8 @@ output$item_rules = renderDataTable({
   
   df = dbGetQuery(db, 
           'SELECT item_id, response, item_score FROM dxScoring_rules 
-                    WHERE item_id=?;', values$selected_ctt_item$item_id) %>%
-        inner_join(values$distr_legend, by='response') %>%
+                    WHERE item_id=?;', values$selected_ctt_item$item_id) |>
+        inner_join(values$distr_legend, by='response') |>
         select(.data$item_id,legend=.data$color, .data$response, .data$n, .data$item_score)
       
   sketch = tags$table(
@@ -326,7 +326,7 @@ output$item_rules = renderDataTable({
                            tags$td(),
                            tags$td('sum: ', style='text-align: right;'), 
                            tags$td(tags$div(sum(df$n), style="background-color:lightgrey;width:100%;height:100%;text-align:center;")),
-                           tags$td(paste('avg: ',ctt_item$mean_score), style='text-align: right;'),
+                           tags$td(sprintf('avg: %.2f',ctt_item$mean_score), style='text-align: right;'),
                            tags$td()),
                    style="font-style:italic;"))
       
@@ -363,7 +363,7 @@ observeEvent(input$item_rules_data, {
 observeEvent(input$go_save_ctt_item_rules, {
   req(input$item_rules_data)
 
-  new_rules = as_tibble(lapply(input$item_rules_data, unlist)) %>%
+  new_rules = as_tibble(lapply(input$item_rules_data, unlist)) |>
       select(.data$item_id, .data$response, item_score = 'score', old_val = 'V6')
   
   withBusyIndicatorServer("go_save_ctt_item_rules",
