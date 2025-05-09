@@ -114,3 +114,8 @@ if(is.null(db))
 output$project_pth = renderText({values$project_name})
 hide('oplm_inputs')
 hide('example_datasets')
+
+plottypes = tibble(plot = c("hist", "box", "ecdf", "dens", "pointrange", "box", "line", "scat"), 
+  type = c("nominal", "nominal", "nominal", "nominal", "nominal", "nominal", "ordinal", "continuous"),
+  aim = c("dist", "dist", "dist", "dist", "comp", "comp", "rel", "rel"),
+  message = c(rep("grouping", 7), "covariate"))

@@ -195,12 +195,13 @@ jQuery(function()
             // and can be detached at the moment of sending a trigger
             tb.trigger('datatable_change', [row.data(), cell.index().column]);
           }
-          else
+          /*else
           {
             td.text($(this).val());
-          }
+          }*/
 		  td.css('max-width','');
           $(this).remove();
+		  cell.draw()
         });
     
         td.empty().append(editor);
@@ -307,7 +308,7 @@ dtshrink = function(dtsettings)
   api.draw();
 };
 
-
+// lijtk veel beter om render te gebruiken
 dt_numcol = function(dtsettings){
   var api = new $.fn.dataTable.Api(dtsettings);
   var container = $(api.table().container());
@@ -326,11 +327,13 @@ dt_numcol = function(dtsettings){
   });
   
   container.find('td[class*="dec-"]').each(function()
-  {
-	var t = $(this).text().trim();
-	var n = t.indexOf('.');
+  {	
 	//var dc = parseInt(this.className.match(/(?<=dec\-)\d+/)[0]); // rstudio browser does not have full regex support
 	var dc = parseInt(this.className.match(/dec\-\d+/)[0].replace('dec-','')); 
+	
+	var t = $(this).text().trim();
+	
+	var n = t.indexOf('.');
     
 	
 	if(n <0){
@@ -342,6 +345,21 @@ dt_numcol = function(dtsettings){
   });
 };
 
+dt_render_dec = function(data,ndigits)
+{
+	var t = parseFloat(data);
+	t = +t.toFixed(ndigits);
+	t = t+'';
+	
+	var n = t.indexOf('.');    
+	
+	if(n <0){
+      return(t + '\u2008'+ '\u2007'.repeat(ndigits));
+    } else 
+    {
+      return(t + '\u2007'.repeat(n + 1 + ndigits - t.length));
+    }
+}
 
 
 dt_btn_dropdown = function(dtsettings){
@@ -534,7 +552,7 @@ update_footplot = function(td, html)
 			return '<span style="color:'+c+';">&#9679;</span><span>'+x+': '+y+'</span>';
 		}
 		me.sparkline(values, 
-			{type: 'bar', barColor: '#bfb5b6', barSpacing: 0, zeroAxis: false, barWidth: barw, height:height+'px',width:width+'px',tooltipFormatter:tooltip});
+			{type: 'bar', barColor: '#bfb5b6', barSpacing: 0, zeroAxis: false, barWidth: barw, height:Math.round(height)+'px',width:Math.round(width)+'px',tooltipFormatter:tooltip});
 			
 			
 		if(axis)
@@ -592,13 +610,15 @@ update_footplot = function(td, html)
 	
 	td.find('div.sparkdensity').each(function()
 	{
+
 		var me = $(this);
 		var txt, freex;
-		me.find('canvas').remove();
+		me.parent().find('canvas').remove();
 			
 		var width = me.parent().width();
 		var values = me.data('values');
 	
+
 		var height = Math.min(width,100);
 		
 		var mn =  parseFloat(me.data('min'))
@@ -619,14 +639,14 @@ update_footplot = function(td, html)
 		}
 
 		me.sparkline(values, 
-			{type: 'line', spotColor: '', minSpotColor: '',maxSpotColor: '', height:height, width:width,
+			{type: 'line', spotColor: '', minSpotColor: '',maxSpotColor: '', height:Math.round(height)+'px', width:Math.round(width)+'px',
 				tooltipFormatter:tooltip
 			});
 		if(axis)
 		{			
 			var ticks = 4;
-			
-			var canv = $('<canvas width="' + width + 'px" height="14px" style="width:100%">').appendTo(me).get(0);
+			console.log(width);
+			var canv = $('<canvas width="' + width + '" height="14" style="width: 100%">').appendTo(me).get(0);
 			var ctx = canv.getContext('2d');
 			ctx.lineWidth=1;
 			ctx.strokeStyle="#404040";

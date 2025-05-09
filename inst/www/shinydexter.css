@@ -852,4 +852,25 @@ div.select_slider img{
   user-select: none;
 }
 
+.pal-opt-name{
+	width:5em;
+	display:inline-block;
+}
+
+.pal-opt-col{
+	width:1em;
+	height:0.9em;
+	display:inline-block;
+	margin-right:1px;
+}
+
+div.pal-opt{
+	white-space: nowrap;
+}
+
+.selectize-input > div.pal-opt{
+	width: 90%;
+    overflow: hidden;
+}
+
 

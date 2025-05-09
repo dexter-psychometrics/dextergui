@@ -8,6 +8,8 @@ output$inter_booklets = renderDataTable({
               list(className = "numeric", targets = list(7)),
               list(className = "dec-2", targets = list(2,3,4,5)))
   
+  
+  
   drawcallback = init_sparks(.box = list(chartRangeMin = 0, chartRangeMax = max(values$ctt_booklets$max_booklet_score)),
                              add_js='dt_numcol(settings);')
   

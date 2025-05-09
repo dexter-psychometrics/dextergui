@@ -36,13 +36,15 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
   # accessing restricted volumes breaks the app on windows
   if(Sys.info()["sysname"] == 'Windows')
   {
-    restricted = tibble(name = trimws(system("wmic logicaldisk get Caption", intern = TRUE)),
-                        size = trimws(system("wmic logicaldisk get Size", intern = TRUE))) |>
-      filter(!grepl('^\\d+$',.data$size,perl=TRUE) & !(.data$name %in% c('Caption',''))) |>
-      pull(.data$name)
-    
-    if(length(restricted)==0)
-      restricted=NULL
+    try({
+      restricted = tibble(name = trimws(system("wmic logicaldisk get Caption", intern = TRUE)),
+                          size = trimws(system("wmic logicaldisk get Size", intern = TRUE))) |>
+        filter(!grepl('^\\d+$',.data$size,perl=TRUE) & !(.data$name %in% c('Caption',''))) |>
+        pull(.data$name)
+      
+      if(length(restricted)==0)
+        restricted=NULL
+    }, silent=TRUE)
   } 
   
 
@@ -112,6 +114,8 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
     if(!is.null(dbpath)) 
       db = open_project(dbpath)
     
+    cache = lru_cache(50)
+    
     # defaults are always reset in init_project
     default_reactive = list(rules = NULL, new_rules = NULL, ctt_items=NULL, ctt_booklets=NULL,
                             inter_booklet = NULL, inter_plot_items = NULL, item_properties=NULL,
@@ -149,8 +153,9 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
     
 # RE-INIT, run init_project() at the start and  whenever a (significant) db change occurs ------------------------
     
-++init.R++
-    values$ctt_items_settings = list(keep_search = TRUE)
+..include_file('init.R')
+
+values$ctt_items_settings = list(keep_search = TRUE)
       
 # autofill for predicate
 observeEvent(input$varsuggest, 
@@ -184,31 +189,35 @@ observeEvent(input$quit_application,{
 
 # project page ------------------------------------------------------------
 
-++projects.R++
-    
+..include_file('projects.R')
+
 # Respons data import -------------------------------------------------------
 
-++respons_data.R++
+..include_file('respons_data.R')
 
 # Classical test theory ---------------------------------------------------
 
-++ctt.R++
+..include_file('ctt.R')
 
 # ENORM -------------------------------------------------------------------
 
-++fit_enorm.R++
-      
-++ability.R++
-
-++ability_plots.R++      
-  
-++plausible_values.R++  
+..include_file('fit_enorm.R')
+..include_file('ability.R')
+..include_file('plausible_values.R')
 
 
 # DIF etc. ----------------------------------------------------------------
 
-++subgroup.R++  
-  
+..include_file('subgroup.R')
+
+# for suggested packages
+  observeEvent(input$do_install_package,{
+    req(input$install_package_name)
+    removeModal()
+    install.packages(input$install_package_name)
+    
+  })
+
 }
   
   shinyApp(get_ui(), server)

@@ -1,5 +1,22 @@
 ### extensions to shiny tags ###
 
+require_ask_install = function(package, 
+  msg = sprintf('This action requires the package "%s" to be installed.\nDo you wish to install it?', package))
+{
+  if(requireNamespace(package, quietly=TRUE)) return(TRUE)
+  
+  showModal(modalDialog(
+    msg,
+    hidden(textInput("install_package_name","",value=package)),
+    title="Install required package",
+    footer = tagList(actionButton("do_install_package", "Install"),
+      modalButton("Cancel")
+    )
+  ))
+  # we cannot wait unfortunately
+  return(FALSE)
+}
+
 dt_attach_dependencies = function(dt)
 {
   dep = datatable(tibble(a=0))$dependencies
@@ -119,6 +136,29 @@ multiToggleButton = function(id, choices, selected='', btn_width='7em', style=NU
   
   do.call(tags$div, args)
   
+}
+
+paletteInput = function(inputId, label, selected='ggplot',width=NULL,size=NULL)
+{
+  opts = list( 
+    render = I("{
+        item: function(item, escape) { 
+          return item.label; 
+        },
+        option: function(item, escape) { 
+          return item.label; 
+        }
+      }"))
+  
+  selectizeInput(inputId, label, choices=palette_choices(), selected=selected, width=width,size=size, multiple=FALSE, options=opts)
+}
+
+palette_choices = function(n_colors=1)
+{
+  x = filter(gui_palettes, .data$max_colors >= n_colors)
+  choices = as.list(x$names)
+  names(choices) = x$content
+  choices
 }
 
 

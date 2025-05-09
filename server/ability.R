@@ -103,6 +103,7 @@ output$person_abilities_csv_download = downloadHandler(
   }
 )
 
+..include_macro_file("generate_ab_plot.R", "ability")
 
 
 observeEvent(input$go_ability_tables, {
@@ -131,19 +132,25 @@ observeEvent(input$go_ability_tables, {
   })
 })
 
+
 output$abl_tables = renderDataTable(
 {
-    if(!is.null(values$abl_tables))
-    {
-         mutate(values$abl_tables, theta = round(.data$theta,3), se = round(.data$se,3))
-    }
-},rownames = FALSE, selection = 'none', class='compact',extensions = 'Buttons',
-   options = list(dom='<"dropdown" B>lfrtip',
-                   buttons= dt_buttons('abl_tables'),
-                   pageLength = 20, scrollX = TRUE,
-                   columnDefs = list(list(className = "dec-3", targets = list(2,3))),
-                   fnDrawCallback = JS('dt_numcol'),
-                   initComplete = JS('dt_btn_dropdown')))
+  req(values$abl_tables)
+  
+
+  dat = mutate(values$abl_tables, theta = round(.data$theta,3), se = round(.data$se,3))
+  
+  datatable(dat,
+    rownames = FALSE, selection = 'none', class='compact',extensions = 'Buttons',
+    options = list(dom='<"dropdown" B>lfrtip',
+      buttons= dt_buttons('abl_tables'),
+      pageLength = 20, scrollX = TRUE,
+      columnDefs = list(list(targets = which(colnames(dat) %in% c('theta','se')) -1L,render=JS("function(data,type,row){return(dt_render_dec(data,3));}"))),
+      fnDrawCallback = JS('dt_numcol'),
+      initComplete = JS('dt_btn_dropdown')))
+  
+
+})
 
 output$abl_tables_xl_download = downloadHandler(
   filename = function(){paste0(gsub('\\.\\w+$','',basename(db@dbname), perl=TRUE),'_abl.xlsx')},

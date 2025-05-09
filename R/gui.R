@@ -23,6 +23,8 @@ plotUI = function(w=c('pvp','abp'))
   w = match.arg(w)
   id = function(i) sprintf('%s_%s',w,i)
   
+  empty_option = list(allowEmptyOption=TRUE, showEmptyOptionInDropdown=TRUE,emptyOptionLabel='none')
+  
   tagList(
     fluidRow(
       column(width = 12,
@@ -34,47 +36,50 @@ plotUI = function(w=c('pvp','abp'))
              tags$style(type = "text/css",
                         ".shiny-output-error { visibility: hidden; }",
                         ".shiny-output-error:before { visibility: hidden; }"),
-             plotOutput(outputId = id("plot"))
+             plotOutput(outputId = id("plot")),
+             tags$div(tableOutput(outputId = id("table")),style='margin:2em;')
       ),
+      # helplabels bij group, weights, clusters, strata
+      # strata kan meerdre zijn natuurlijk
       column(width = 4,
-             hidden(selectInput(inputId = id("group"), label = "Grouping Variable", choices=c('none'), width='100%')),
-             if(w=='pvp'){hidden(selectInput(inputId = id("weight"), label = "Weight by", choices=c('none'), width='100%'))},
+             hidden(selectizeInput(inputId = id("group"), label = "Grouping Variable", choices=c(), width='100%',options=empty_option)),
+             hidden(selectizeInput(inputId = id("weights"), label = "Weights", choices=c(), width='100%',options=empty_option)),
+             hidden(selectInput(inputId = id("cluster"), label = "Clusters", choices=c(), width='100%', multiple=TRUE)),
+             hidden(selectInput(inputId = id("stratum"), label = "Strata", choices=c(), width='100%', multiple=TRUE)),
+             hidden(multiToggleButton(id = id('outputformat'),choices=c('plot','table'), selected='plot')),
+             hr(),
+             hidden(numericInput(inputId = id('ci'),label='Confidence interval', value=0.95,min=0,max=.99,step=.01,width='100%')),
              hidden(multiToggleButton(id = id('stackfacet'),
-                                      choices = c(stacked= 'Stacked', facetted='Facetted', joy='Joy'), selected = 'stacked')),
+                                      choices = c(overlay= 'Overlay', facetted='Facetted', joy='Joy'), selected = 'overlay')),
              hidden(selectInput(inputId = id("xvar"), label = "x-variable",
                                 choices = c(), width='100%')),
              hidden(checkboxInput(inputId = id("fill"), label = "Fill", value = TRUE)),
              hidden(checkboxInput(inputId = id("grid"), label = "Grid", value = TRUE)),
              hidden(tags$input(id = id("color"), type = 'color', value = '#4DAF4A', style = 'width:5em;', class = 'shiny-color-picker')),
+             hidden(paletteInput(inputId = id("palette"),"Palette")),
              hidden(checkboxInput(inputId = id("linetype"), label = "Varying line types", value = FALSE)),
              hidden(sliderInput(inputId = id("bins"), label = "Number of bins",
                                 min = 5, max = 60, value = 30, step = 1, round = TRUE, ticks = FALSE, width='100%')),
              hidden(sliderInput(inputId = id("trans"), label = "Transparency",
                                 min = 0.2, max = 1, value = 0.5, step = 0.05, ticks = FALSE, width='100%')),
-             hidden(checkboxInput(inputId = id("err"), label = "Error Bars")),
-             hidden(checkboxInput(inputId = id("dodge"), label = "Dodge")),
-             hidden(checkboxInput(inputId = id("marg"), label = "Marginal plots")),
              hidden(eCheckboxGroupInput(inputId = id("fitlines"), label = '', choices=c("Fitline(s)"='fitlines',"se"),
                                         inline=FALSE, direction='horizontal')),
-             hidden(textInput(inputId = id("main"),
-                              label = "Title", width='100%')), 
-             fluidRow(
+             hidden(tags$div(id=id("labels"),
+              textInput(inputId = id("main"), label = "Title", width='100%'), 
+              fluidRow(
                column(width = 6,
-                      hidden(textInput(inputId = id("xlab"),
-                                       label = "Label x-axis"))),
+                      textInput(inputId = id("xlab"),label = "Label x-axis")),
                column(width = 6,
-                      hidden(textInput(inputId = id("ylab"),
-                                       label = "Label y-axis")))
-             ),
-             
-             conditionalPanel(
-               condition = "$('#pvp_plotbar img').length > 0", 
+                      textInput(inputId = id("ylab"), label = "Label y-axis")))
+             )),
+             hidden(
+             tags$div(id=id('download-container'),
                tags$h4('Save plot'),
                tagAppendAttributes(numericInput(id('download_width'), 'Width (cm)', value = 14, min = 2, max = 50, 
                                                 width='6em'),style='display:inline-block;'),
                tagAppendAttributes(numericInput(id('download_height'), 'Height (cm)', value=8, min = 2, max = 50, 
                                                 width='6em'),style='display:inline-block;'),
-               downloadButton(id('download'), 'Download'))
+               downloadButton(id('download'), 'Save')))
       )
     ))
 }
@@ -257,18 +262,22 @@ get_ui = function()
 		          tags$p(tags$i('Click on one of the rows to display the item total regressions.')),
 		          style="padding-right:2em;"),
 		        column(6,
-		         tags$h4('Item total regressions',style='margin-bottom:1em;display:inline-block;'),
-		         tags$div(
-		           tags$div(
-		             checkboxInput('inter_summate','summate', value=TRUE), 
-		             checkboxInput('inter_show_observed','show observed', value=TRUE),
-		             style='display:inline-block;width:20ex;'),
-		           enumericInput('inter_curtains', 'curtains', value='10', min='0', max='100', width = '6em', inline=TRUE),
-		           style='display:inline-block;float:right;'),
-		         uiOutput('inter_current_booklet'),
+		         tags$h4('Item total regressions'),
+		          fluidRow(
+		            column(8,
+		              uiOutput('inter_current_booklet',container=tags$h5),
+		              tags$p(tags$i("These plots show three item-total regressions. The dots show the observed regression: the average score on the item given the total score",
+            		         " on the test. There are also two regression models: the interaction model is shown with a thicker but lighter line,",
+            		         " and the Rasch model is shown with a thinner, darker line."))),
+		            column(4,
+		              tags$div(
+		                checkboxInput('inter_summate','summate', value=TRUE), 
+		                checkboxInput('inter_show_observed','show observed', value=TRUE),
+		                style='display:inline-block;width:20ex;'),
+		              enumericInput('inter_curtains', 'curtains', value='10', min='0', max='100', width = '6em', inline=TRUE))),
 		         tags$div(
 		           plotSlider('interslider',width='90%'),
-		           style='padding:5px;clear:both;'
+		           style='padding:5px;'
 		           )),
 		        style='padding:1em;')),
 				tabPanel('items',

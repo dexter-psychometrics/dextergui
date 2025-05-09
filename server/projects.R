@@ -466,7 +466,6 @@ output$person_properties = renderDataTable(
   
   req(update, cancelOutput = TRUE)
   
-  
   if(ncol(values$person_properties)>1)
   {
    sketch=tags$table(
@@ -480,15 +479,24 @@ output$person_properties = renderDataTable(
       tags$tbody())
   }
 
+  options = list(pageLength = 20, autoWidth = FALSE,
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    orderCellsTop = TRUE,
+    initComplete = JS("draw_dt_footer"))
+  
+  dbls = sapply(values$person_properties, is_double_)
+
+  if(any(dbls))
+  {
+    options$columnDefs = list(list(targets = unname(which(dbls))-1L, render=JS("function(data,type,row){return(dt_render_dec(data,2));}")))
+  }
+
   datatable(values$person_properties, 
             container=sketch,
             selection = 'none', rownames = FALSE,  
             class='compact readable', 
-            options = list(pageLength = 20, autoWidth = FALSE,
-                            scrollX = TRUE,
-                            fixedColumns = list(leftColumns = 1),
-                            orderCellsTop = TRUE,
-                           initComplete = JS("draw_dt_footer")),
+            options=options,
             extensions = 'FixedColumns')
 
 })   

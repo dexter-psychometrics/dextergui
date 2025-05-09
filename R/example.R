@@ -15,7 +15,15 @@ example_datasets_ui = function(...)
   }
   
   out = list()
-
+  
+  if(file.exists(system.file('extdata/p3.rds',package='dextergui')))
+  {
+    out$pirls = card('dextergui',list(title='Pirls 2021',
+      description=tagList("Data for paper based administrations in 3 countries for the Progress in International Reading Literacy Study (PIRLS).",
+        "Source: ", tags$a("www.iea.nl/studies/iea/pirls", href="https://www.iea.nl/studies/iea/pirls", target='blank_'))),
+      'pirls3')
+  }
+  
   out$verbAggr = card('dexter', getHelpList('verbAggrData','dexter'), 'verbAggr')
   
   if (requireNamespace("psych", quietly = TRUE))
@@ -25,7 +33,7 @@ example_datasets_ui = function(...)
   {
     try({out$bs07a = card('sirt',getHelpList('data.bs07a','sirt'), 'bs07a')}, silent=TRUE)
     try({out$math = card('sirt',getHelpList('data.math','sirt'), 'math')}, silent=TRUE)
-    try({out$timss = card('sirt',getHelpList('data.timss07.G8.RUS','sirt'), 'timss')}, silent=TRUE)
+    try({out$timss = card('sirt',getHelpList('data.timss','sirt'), 'timss')}, silent=TRUE)
   }
   
   if (requireNamespace("MLCIRTwithin", quietly = TRUE))
@@ -41,7 +49,24 @@ example_db = function(name)
 {
   db=NULL
 
-  if(name=='blot')
+  if(name=='pirls3')
+  {
+    x = readRDS(system.file('extdata/p3.rds',package='dextergui'))
+    x$persons = mutate(x$persons,person_id=paste(.data$idcntry,.data$idschool,.data$idstud,sep='_')) |>
+      select(-'idstud') |>
+      mutate(idschool=paste(.data$idcntry,.data$idschool,sep='_'))
+    
+    x$rsp = mutate(x$rsp,person_id=paste(.data$idcntry,.data$idschool,.data$idstud,sep='_'))
+    x$rsp = inner_join(x$rsp,select(x$persons, 'person_id','booklet_id'),by='person_id')
+    
+    db = start_new_project(x$rules,':memory:')
+    # item position might be nice
+    add_response_data(db, x$rsp, design=distinct(x$rsp, .data$booklet_id, .data$item_id))
+    add_item_properties(db,x$items)
+    add_person_properties(db,select(x$persons,-'booklet_id') |> 
+        mutate(idcntry = case_match(.data$idcntry,528~'NLD',957~'BFR',926~'ENG')))
+    
+  } else if(name=='blot')
   {
     ev = new_environment()
     data('blot', package='psych', envir=ev)
@@ -86,46 +111,22 @@ example_db = function(name)
   } else if(name=='timss')
   {
     ev = new_environment()
-    data('data.timss07.G8.RUS', package='sirt', envir=ev)
-
-    raw = lapply(ev$data.timss07.G8.RUS$raw, function(col)
-      {
-        lab = attr(col,'value.labels')
-        if(is.null(lab)){
-          col
-        } else
-        {
-          as.character(factor(col, lab, names(lab)))
-        }
-      }) |>
-        as_tibble() |>
-        gather(key='item_id', value='response', -.data$idstud, na.rm=TRUE) |>
-        mutate(response = if_else(is.na(.data$response), '', .data$response))
-      
-    rules = as_tibble(ev$data.timss07.G8.RUS$scored) |>
-      gather(key='item_id', value='item_score', -.data$idstud, na.rm=TRUE) |>
-      inner_join(raw,by=c('idstud','item_id')) |>
-      distinct(.data$item_id, .data$response, .data$item_score)
-
-    db = start_new_project(rules, ':memory:')
+    data('data.timss', package='sirt', envir=ev)
+    items = ev$data.timss$item |> 
+      rename(item_id='item')
     
-    raw = raw |>
-      rename(person_id = 'idstud') |>
-      mutate(inum = dense_rank(.data$item_id)) |>
-      arrange(.data$person_id, .data$inum) |>
-      group_by(.data$person_id) |>
-      mutate(booklet_id=paste(.data$inum,collapse=' ')) |>
-      ungroup() |>
-      mutate(booklet_id=paste('booklet', dense_rank(.data$booklet_id))) |>
-      group_by(.data$booklet_id) |>
-      filter(n_distinct(.data$person_id)>10) |>
-      ungroup() 
+    db = start_new_project(
+      rules=tibble(item_id=rep(items$item_id,2), 
+        response=rep(0:1,each=nrow(items)),
+        item_score=.data$response), 
+      ':memory:',
+      person_properties = list(gender='<unknown>', age=NA_real_))
     
-    design = distinct(raw,.data$booklet_id,.data$item_id)
+    add_booklet(db,ev$data.timss$data |> mutate(gender=if_else(.data$girl==1,'girl','boy')) |> rename(person_id='idstud'),
+      booklet_id='TIMSS')
     
-    add_response_data(db, data=raw, design=design)
+    add_item_properties(db, items)
     
-    add_item_properties(db, rename(ev$data.timss07.G8.RUS$iteminfo, item_id='item'))
   } else if(name=='SF12')
   {
     ev = new_environment()

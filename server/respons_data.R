@@ -106,8 +106,8 @@ observeEvent(input$go_import_data, {
     if(booklet_id == '')
       stop('please provide a booklet_id')
     
-    print(values$import_data)
-    assign("idt", values$import_data, envir = .GlobalEnv)
+    #print(values$import_data)
+    #assign("idt", values$import_data, envir = .GlobalEnv)
     
     result = add_booklet(db, values$import_data, booklet_id = booklet_id, auto_add_unknown_rules=TRUE)
     n = nrow(values$import_data)

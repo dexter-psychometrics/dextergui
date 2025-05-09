@@ -1,5 +1,5 @@
 
-# With some small changes borrrowed from: 
+# With some  changes borrowed from: 
 # https://github.com/daattali/advanced-shiny/tree/master/busy-indicator
 
 

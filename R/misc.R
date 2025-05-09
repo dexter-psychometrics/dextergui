@@ -7,12 +7,8 @@ if.else = function(a,b,c)
   c
 }
 
-none2null = function(x){
-  if(length(x)==1 && tolower(x)=='none') return(NULL)
-  x[tolower(x)!='none']
-} 
-
 is_integer_ = function(x) is.integer(x) || (is.numeric(x) && all(x %% 1 == 0))
+is_double_ = function(x) is.double(x) && !all(x %% 1 == 0)
 
 dropNulls = function(x) x[!vapply(x, is.null, FUN.VALUE = logical(1))]
 
@@ -44,6 +40,44 @@ resp_data_split_bkl = function(rsp)
     })
   names(res) = lapply(res, function(x) x$design$booklet_id[1])
   res
+}
+
+lru_cache = function(size)
+{
+  cache = vector(mode='list', length=size)
+  i = 1L
+  
+  as_char = function(x)
+  {
+    if(length(x) == 0 || (length(x)==1 && x == '')) 'NULL'
+    else as.character(x)
+  }
+  
+  make_hash = function(hash)
+  {
+    if(is.null(hash)) return('NULL')
+    
+    paste(unlist(lapply(hash, as_char)), collapse = '_._')
+  }
+  
+  function(hash, obj=NULL)
+  {
+    hash = make_hash(hash)
+    if(is.null(obj))
+    {
+      #if(!is.null(cache[[hash]]))
+      #{
+      #  print(sprintf('from mem: %s', hash))
+      #}
+      return(cache[[hash]])
+    }
+    #print(sprintf('caching: %s', hash))
+    if(i>size) i <<- 1L
+    cache[[i]] <<- obj
+    names(cache)[i] <<- hash
+    i <<- i+1L
+    NULL
+  }
 }
 
 
@@ -277,7 +311,9 @@ read_spreadsheet = function(fn)
     read_excel(fn, sheet = 1, col_names = TRUE)
   } else if(grepl('\\.ods$', fn, perl=TRUE, ignore.case=TRUE))
   {
-    read_ods(fn, sheet = 1, col_names = TRUE)
+    if(!require_ask_install('readODS')) return(NULL)
+
+    readODS::read_ods(fn, sheet = 1, col_names = TRUE)
   } else
   {
     con = file(fn, "r")

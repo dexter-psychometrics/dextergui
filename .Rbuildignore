@@ -2,6 +2,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^server
+^try_pirls
 ^example
 ^cran-comments\.md$
 ^inno
