@@ -34,18 +34,18 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
  
   restricted = NULL
   # accessing restricted volumes breaks the app on windows
-  if(Sys.info()["sysname"] == 'Windows')
-  {
-    try({
-      restricted = tibble(name = trimws(system("wmic logicaldisk get Caption", intern = TRUE)),
-                          size = trimws(system("wmic logicaldisk get Size", intern = TRUE))) |>
-        filter(!grepl('^\\d+$',.data$size,perl=TRUE) & !(.data$name %in% c('Caption',''))) |>
-        pull(.data$name)
-      
-      if(length(restricted)==0)
-        restricted=NULL
-    }, silent=TRUE)
-  } 
+  # if(Sys.info()["sysname"] == 'Windows')
+  # {
+  #   try({
+  #     restricted = tibble(name = trimws(system("wmic logicaldisk get Caption", intern = TRUE)),
+  #                         size = trimws(system("wmic logicaldisk get Size", intern = TRUE))) |>
+  #       filter(!grepl('^\\d+$',.data$size,perl=TRUE) & !(.data$name %in% c('Caption',''))) |>
+  #       pull(.data$name)
+  #     
+  #     if(length(restricted)==0)
+  #       restricted=NULL
+  #   }, silent=TRUE)
+  # } 
   
 
   if(is.null(roots))
@@ -105,6 +105,7 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
 
   server = function(input, output, session)
   {
+
     # some server globals
     db = NULL
     

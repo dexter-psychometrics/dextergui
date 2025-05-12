@@ -369,7 +369,7 @@ get_ui = function()
 			  tabsetPanel(type = 'tabs',id='enorm_tabs',
 				tabPanel('Abilities', value='ability',
 				  # standard_errors weggelaten, op termijn zouden die in abplot meegenomen kunnen worden       
-				  wellPanel(generate_inputs(ability, omit=c('parms','merge_within_persons','parms_draw'), 
+				  wellPanel(generate_inputs(ability, omit=c('dataSrc','parms','merge_within_persons','parms_draw'), 
 				                            inline=TRUE,width='120px'),
 				            style='border:none;'),
 				  tabsetPanel(type='tabs',
@@ -379,7 +379,7 @@ get_ui = function()
 					         dataTableOutput('person_abilities'),
 					         download_buttons('person_abilities')))),
 				tabPanel('Plausible values', value='plausible_values',
-				  wellPanel(generate_inputs(plausible_values, omit=c('parms','merge_within_persons','parms_draw'), 
+				  wellPanel(generate_inputs(plausible_values, omit=c('dataSrc','parms','merge_within_persons','parms_draw'), 
 				                            inline=TRUE,width='150px'),
 				            style='border:none;'),plotUI('pvp')),
 				tabPanel('Score-ability tables', value='ability_tables',

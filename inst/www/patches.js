@@ -205,7 +205,8 @@ range = function()
   $.fn.serializeObject = function()
   {
     var a = {};
-    $.each(this.find('input, select, textarea').add(this.filter('input, select, textarea')).serializeArray(),
+	console.log(this.find('input, select, textarea').add(this.filter('input, select, textarea')));
+    $.each(this.find('input, select, textarea').add(this.filter('input, select, textarea')),
       function(i, r)
       {
         a[r.name] = r.value;
