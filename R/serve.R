@@ -136,9 +136,12 @@ ungroup() |>
 mutate(booklet_id = as.character(.data$booklet_id))
 tia$booklets = tia$booklets |>
 inner_join(sparks, by='booklet_id')
+tia$items = inner_join(tia$items, mutate(data$design, across(where(is.factor), as.character)), by=c('booklet_id','item_id')) |>
+relocate('item_position', .after='booklet_id')
 if(all(grepl('^\\d+$',tia$booklets$booklet_id))){
 tia$tbooklets = arrange(tia$booklets, as.integer(.data$booklet_id))
-tia$items = arrange(tia$items, .data$item_id, as.integer(.data$booklet_id))}
+tia$items = arrange(tia$items, .data$item_id, as.integer(.data$booklet_id))} else{
+tia$items = arrange(tia$items, .data$item_id, .data$booklet_id)}
 values$ctt_items = tia$items
 values$ctt_booklets = tia$booklets}
 set_js_vars(db, session)
@@ -307,8 +310,8 @@ colnames(rules) = tolower(colnames(rules))
 if(length(setdiff(c('item_id','item_score','response'),colnames(rules))) == 0){
 values$new_rules = rules |>
 mutate(item_score = as.integer(.data$item_score), item_id = as.character(.data$item_id),
-response = gsub('\\.0+$','',as.character(.data$response), perl=TRUE)) |>
-select(.data$item_id, .data$response, .data$item_score)
+response = coalesce(gsub('\\.0+$','',as.character(.data$response), perl=TRUE),'')) |>
+distinct(.data$item_id, .data$response, .data$item_score)
 output$rules_upload_error = renderText({''})} else if(length(setdiff(c('item_id','noptions','key'),colnames(rules))) == 0){
 values$new_rules = keys_to_rules(rules |> mutate(nOptions = as.integer(.data$noptions)))
 output$rules_upload_error = renderText({''})} else{
@@ -511,7 +514,7 @@ colnames(values$import_data))
 if(length(items) == 0)
 return(tags$b("None of the column names in your data correspond to known item_id's"))
 unknown_rsp = values$import_data[,items] |>
-gather(key='item_id', value='response') |>
+pivot_longer(names_to='item_id', values_to='response') |>
 mutate(response = if_else(is.na(.data$response), 'NA', as.character(.data$response))) |>
 distinct() |>
 anti_join(get_rules(db), by=c('item_id','response')) |>
@@ -677,7 +680,10 @@ selected = 1
 isolate({
 if(!is.null(values$inter_booklet)){
 selected = min(which(values$ctt_booklets$booklet_id == values$inter_booklet))}})
-datatable({ mutate_if(values$ctt_booklets, is.double,round,digits=2)},
+dat = values$ctt_booklets |>
+mutate(across(where(is.double),~round(.x,digits=2))) |>
+rename_with(tbl_names)
+datatable(dat,
 rownames = FALSE, selection = list(mode = 'single', selected = selected),
 class='compact', extensions = 'Buttons',
 options = list(columnDefs = cdef, fnDrawCallback = drawcallback,
@@ -688,12 +694,12 @@ initComplete = JS("dt_btn_dropdown")))})
 output$inter_booklets_xl_download = downloadHandler(
 filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_ctt_booklets.xlsx')},
 content = function(file) {
-write_xlsx(select(values$ctt_booklets, -.data$test_score), file)}
+write_xlsx(select(values$ctt_booklets, -"test_score"), file)}
 )
 output$inter_booklets_csv_download = downloadHandler(
 filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_ctt_booklets.csv')},
 content = function(file) {
-write.csv2(select(values$ctt_booklets, -.data$test_score), file, row.names = FALSE, fileEncoding = "utf8")}
+write.csv2(select(values$ctt_booklets, -"test_score"), file, row.names = FALSE, fileEncoding = "utf8")}
 )
 observe({
 req(values$ctt_booklets,input$inter_booklets_rows_selected)
@@ -753,7 +759,7 @@ contentType = "image/png"
 output$ctt_items = renderDataTable({
 req(values$ctt_items)
 data = ctt_items_table(values$ctt_items, input$ctt_items_averaged) |>
-mutate_if(is.double,round,digits=2)
+mutate(across(where(is.double),~round(.x,digits=2)))
 selected = 1
 search_ = ""
 isolate({
@@ -761,7 +767,7 @@ if(!is.null(values$selected_ctt_item))
 selected = min(which(data[['item_id']] == values$selected_ctt_item[['item_id']]))
 if(values$ctt_items_settings$keep_search && !is.null(input$ctt_items_search))
 search_ = input$ctt_items_search})
-datatable(data,
+datatable(rename_with(data,tbl_names),
 rownames = FALSE, selection = list(mode = 'single', selected = selected), class='compact',
 extensions = 'Buttons',
 options = list(dom='<"dropdown" B>lfrtip',
@@ -856,7 +862,7 @@ df = dbGetQuery(db,
 'SELECT item_id, response, item_score FROM dxScoring_rules
 WHERE item_id=?;', values$selected_ctt_item$item_id) |>
 inner_join(values$distr_legend, by='response') |>
-select(.data$item_id,legend=.data$color, .data$response, .data$n, .data$item_score)
+select("item_id",legend="color", "response", "n", "item_score")
 sketch = tags$table(
 class = "compact readable",
 tableHeader(c('item_id','','response','n','score','')),
@@ -892,7 +898,7 @@ runjs("$('#go_save_ctt_item_rules').addClass('btn-primary');")})
 observeEvent(input$go_save_ctt_item_rules, {
 req(input$item_rules_data)
 new_rules = as_tibble(lapply(input$item_rules_data, unlist)) |>
-select(.data$item_id, .data$response, item_score = 'score', old_val = 'V6')
+select("item_id", "response", item_score = 'score', old_val = 'V6')
 withBusyIndicatorServer("go_save_ctt_item_rules",{
 if(any(new_rules$item_score %% 1 != 0)){
 stop('only integer scores allowed')} else if(min(new_rules$item_score) < 0 ){
@@ -939,7 +945,7 @@ n_itm = n_distinct(design$design$item_id)
 links = design$design |>
 arrange(.data$booklet_id,.data$item_id) |>
 mutate(source = dense_rank(.data$item_id) - 1L, target = dense_rank(.data$booklet_id) -1L + n_itm) |>
-select(.data$source, .data$target)}
+select("source", "target")}
 forceNetwork(Links = links, Nodes = nodes, fontSize=11, zoom=TRUE,
 Source = 'source', Target = 'target', opacity=0.7,
 NodeID = 'name', Group = 'group')})
@@ -964,7 +970,6 @@ input$enorm_method,"')")))
 values$parms$xpr = input$enorm_predicate} else{
 values$parms = fit_enorm(db, method=input$enorm_method)}
 show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="enorm_items"] > *')
-show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="new_test"] > *')
 isolate({
 values$update_enorm_plots = (input$enorm_tabs == 'enorm_items')})}
 observeEvent(input$enorm_tabs,{
@@ -974,44 +979,14 @@ values$update_enorm_plots = TRUE})
 observeEvent(input$go_fit_enorm,{
 withBusyIndicatorServer("go_fit_enorm",{
 go_fit_enorm()})})
-observe({
-if(is.null(values$parms) || values$parms$inputs$method=='Bayes' || n_distinct(values$parms$inputs$ssIS$item_score) <=2){
-hide('coef_format')} else{
-show('coef_format')}})
-enorm_coef_table = reactive({
-req(values$parms, input$coef_format)
-cf = coef(values$parms)
-if(input$coef_format == "norm" || values$parms$inputs$method == 'Bayes'){
-cf} else{
-cf |>
-gather('var','val', 3:4 ) |>
-unite('temp', .data$var, .data$item_score) |>
-spread(.data$temp, .data$val)}})
 output$enorm_coef = renderDataTable({
-req(enorm_coef_table())
-cf = enorm_coef_table() |>
-mutate_if(is.numeric, round, digits=3)
-selected=1
-isolate({
-if(!is.null(values$enorm_item_selected)){
-selected = min(which(cf$item_id==values$enorm_item_selected))}})
-if(input$coef_format == "denorm" && values$parms$inputs$method == 'CML'){
-cdef_target = as.list(1:(ncol(cf)-1))
-sketch = tags$table(
-class='compact',
-tags$thead(
-tags$tr(
-tags$th(''),
-tags$th('beta', colspan=(ncol(cf)-1)/2),
-tags$th('se', colspan=(ncol(cf)-1)/2)),
-tags$tr(do.call(tagList,
-lapply(c('item_id',
-gsub('[^\\d]','',colnames(cf)[2:ncol(cf)], perl=TRUE)),
-tags$th)))))} else{
+req(values$parms)
+cf = coef(values$parms) |>
+mutate(across(where(is.numeric), ~round(.x,digits=3)))
 cdef_target = if.else(values$parms$inputs$method == 'CML',
 list(2,3),
 as.list(2:(ncol(cf)-1)))
-sketch = tags$table(tableHeader(colnames(cf)))}
+sketch = tags$table(tableHeader(colnames(cf)))
 datatable(cf, rownames = FALSE, class='compact',
 selection = 'single',
 container = sketch, extensions = 'Buttons',
@@ -1024,16 +999,16 @@ fnDrawCallback = JS('dt_numcol')))})
 output$enorm_coef_xl_download = downloadHandler(
 filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_enorm_coef.xlsx')},
 content = function(file) {
-write_xlsx(enorm_coef_table(), file)}
+write_xlsx(coef(values$parms), file)}
 )
 output$enorm_coef_csv_download = downloadHandler(
 filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_enorm_coef.csv')},
 content = function(file) {
-write.csv2(enorm_coef_table(), file, row.names = FALSE, fileEncoding = "utf8")}
+write.csv2(coef(values$parms), file, row.names = FALSE, fileEncoding = "utf8")}
 )
 observe({
 req(values$parms, input$enorm_slider_nbins, values$update_enorm_plots)
-isolate({selected = enorm_coef_table()[input$enorm_coef_rows_selected,]$item_id})
+isolate({selected = coef(values$parms)[input$enorm_coef_rows_selected,]$item_id})
 if(length(selected)==0)
 selected=NULL
 updateSlider(session, 'enorm_slider',selected=selected,
@@ -1051,7 +1026,7 @@ req(values$parms, input$enorm_slider_nbins, input$enorm_slider_select)
 plot(values$parms, item_id=input$enorm_slider_select, nbins=input$enorm_slider_nbins)})
 observeEvent(input$enorm_coef_rows_selected,{
 updateSlider(session, 'enorm_slider',
-selected = enorm_coef_table()[input$enorm_coef_rows_selected,]$item_id)})
+selected = coef(values$parms)$item_id[input$enorm_coef_rows_selected])})
 output$enorm_slider_download = downloadHandler(
 filename = function(){
 paste0('enorm_',input$enorm_slider_select,'.png')},
@@ -1063,35 +1038,20 @@ dev.off()},
 contentType = "image/png"
 )
 observe({
-input$ability_method
-input$ability_prior
-if(input$ability_method != 'EAP'){
-runjs('hide_inputs("#ability_prior,#ability_mu,#ability_sigma")')} else{
-runjs('show_inputs("#ability_prior")')
-if(input$ability_prior == 'normal'){
-runjs('show_inputs("#ability_mu,#ability_sigma")')} else{
-runjs('hide_inputs("#ability_mu,#ability_sigma")')}}})
+toggle(condition=input$ability_method=='EAP', id='ability_prior')
+toggle(condition = input$ability_method=='EAP' && input$ability_prior == 'normal',selector='#ability_mu,#ability_sigma')})
 observe({
-input$ability_tables_method
-input$ability_tables_prior
-runjs('hide_inputs("#ability_tables_use_draw")')
-if(input$ability_tables_method != 'EAP'){
-runjs('hide_inputs("#ability_tables_prior,#ability_tables_mu,#ability_tables_sigma")')} else{
-runjs('show_inputs("#ability_tables_prior")')
-if(input$ability_tables_prior == 'normal'){
-runjs('show_inputs("#ability_tables_mu,#ability_tables_sigma")')
-if(!is.null(values$parms) && values$parms$inputs$method == 'Bayes')
-runjs('show_inputs("#ability_tables_use_draw")')} else{
-runjs('hide_inputs("#ability_tables_mu,#ability_tables_sigma")')}}})
+toggle(condition=input$ability_tables_method=='EAP', id='ability_tables_prior')
+toggle(condition = input$ability_tables_method=='EAP' && input$ability_tables_prior == 'normal',selector='#ability_tables_mu,#ability_tables_sigma')})
 observeEvent(input$go_ability, {
 withBusyIndicatorServer("go_ability",{
 if(is.null(values$parms))
 go_fit_enorm()
 if(!(is.null(input$ability_predicate) || trimws(input$ability_predicate) == '')){
-abl = eval(parse(text=paste0("ability(db, parms=values$parms, predicate={",input$ability_predicate,"},method='",input$ability_method,
-"',prior='",input$ability_prior,"',mu=",input$ability_mu,",sigma=",input$ability_sigma,")")))} else{
+abl = eval(parse(text=sprintf("ability(db, parms = values$parms, predicate={%s}, method='%s', prior='%s', mu=%f, sigma=%f)",
+input$ability_method, input$ability_prior, input$ability_mu, input$ability_sigma)))} else{
 abl = ability(db, parms = values$parms, method = input$ability_method, prior = input$ability_prior,
-mu = input$ability_mu, sigma = input$ability_sigma )}
+mu = input$ability_mu, sigma = input$ability_sigma)}
 values$person_abl = inner_join(abl, get_persons(db), by='person_id')
 show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="ability"] > *')})})
 output$person_abilities = renderDataTable({
@@ -1301,8 +1261,7 @@ withBusyIndicatorServer("go_ability_tables",{
 if(is.null(values$parms))
 go_fit_enorm()
 values$abl_tables = ability_tables(parms = values$parms, method = input$ability_tables_method,
-sigma = input$ability_tables_sigma,
-prior = input$ability_tables_prior)
+prior = input$ability_tables_prior, sigma = input$ability_tables_sigma, mu = input$ability_tables_mu)
 bkl = unique(pull(values$abl_tables, .data$booklet_id))
 if(is.null(isolate(input$abl_tables_plot_booklet))){
 selected = bkl} else{
@@ -1611,7 +1570,7 @@ req(input$prof_booklet, values$person_properties)
 items = get_items(db) |>
 inner_join(get_design(db), by='item_id') |>
 filter(booklet_id == input$prof_booklet) |>
-select(-.data$item_id)
+select(-"item_id")
 iprop = tibble(name=colnames(items), n = sapply(items, n_distinct)) |>
 filter(between(.data$n, 2, nrow(items)/2))
 updateSelectInput(session, 'prof_item', choices = iprop$name)
@@ -1622,7 +1581,7 @@ semi_join(dbGetQuery(db,
 'SELECT person_id FROM dxadministrations WHERE booklet_id=:booklet;',
 list(booklet=input$prof_booklet)),
 by='person_id') |>
-select(-.data$person_id)
+select(-"person_id")
 pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) |>
 filter(between(.data$n, 2, 3))
 updateSelectInput(session, 'prof_person', choices = pprop$name)}})
@@ -1693,7 +1652,7 @@ contentType = "image/png"
 observe({
 req(values$person_properties, input$main_navbar == 'DIF_pane')
 if(ncol(values$person_properties)>1){
-persons = select(values$person_properties, -.data$person_id)
+persons = select(values$person_properties, -"person_id")
 pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) |>
 filter(.data$n==2)
 updateSelectInput(session, 'DIF_person', choices = pprop$name, selected = pprop$name[1])}})

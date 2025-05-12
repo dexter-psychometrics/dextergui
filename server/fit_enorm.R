@@ -58,7 +58,7 @@ output$design_plot = renderForceNetwork(
     links = design$design |>
       arrange(.data$booklet_id,.data$item_id) |>
       mutate(source = dense_rank(.data$item_id) - 1L, target = dense_rank(.data$booklet_id) -1L + n_itm) |>
-      select(.data$source, .data$target)
+      select("source", "target")
     
     
   }
@@ -103,8 +103,12 @@ go_fit_enorm = function()
     values$parms = fit_enorm(db, method=input$enorm_method)
   }
   show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="enorm_items"] > *')
-  show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="new_test"] > *')
+  #show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="new_test"] > *')
   #show(selector='#enorm_tabs + div')
+  
+  #print(values$parms$inputs$method)
+  #toggle(condition=values$parms$inputs$method == 'Bayes', selector='#ability_tables_parms_draw,#ability_parms_draw,#plausible_values_parms_draw')
+  
   isolate({
     # if not on the relevant tab, postpone updating the slider, it can take a long time with many items
       values$update_enorm_plots = (input$enorm_tabs == 'enorm_items')
@@ -127,72 +131,19 @@ observeEvent(input$go_fit_enorm,{
 
 
 
-
-observe({
-  if(is.null(values$parms) || values$parms$inputs$method=='Bayes' || n_distinct(values$parms$inputs$ssIS$item_score) <=2)
-  {
-    hide('coef_format')
-  } else
-  {
-    show('coef_format')
-  }
-})
-
-
-enorm_coef_table = reactive({
-  req(values$parms, input$coef_format)
-  
-  cf = coef(values$parms) 
-  if(input$coef_format == "norm" || values$parms$inputs$method == 'Bayes')
-  {
-    cf
-  } else
-  {
-    cf |>
-      gather('var','val', 3:4 ) |>
-      unite('temp', .data$var, .data$item_score) |>
-      spread(.data$temp, .data$val)
-  }
-})
-
-
-
 output$enorm_coef = renderDataTable(
 {
-  req(enorm_coef_table())
+  req(values$parms)
 
-  cf = enorm_coef_table() |> 
-    mutate_if(is.numeric, round, digits=3)
-  
-  selected=1
-  isolate({
-    if(!is.null(values$enorm_item_selected)){
-      selected = min(which(cf$item_id==values$enorm_item_selected))
-    }
-  })
-  
-  if(input$coef_format == "denorm" && values$parms$inputs$method == 'CML')
-  {
-    cdef_target = as.list(1:(ncol(cf)-1))
-    sketch = tags$table(
-      class='compact',
-      tags$thead(
-        tags$tr(
-          tags$th(''), 
-          tags$th('beta', colspan=(ncol(cf)-1)/2), 
-          tags$th('se', colspan=(ncol(cf)-1)/2)),
-        tags$tr(do.call(tagList, 
-                        lapply(c('item_id',
-                                 gsub('[^\\d]','',colnames(cf)[2:ncol(cf)], perl=TRUE)), 
-                               tags$th)))))
-  } else 
-  {
-    cdef_target = if.else(values$parms$inputs$method == 'CML', 
+  cf = coef(values$parms) |> 
+    mutate(across(where(is.numeric), ~round(.x,digits=3)))
+ 
+
+  cdef_target = if.else(values$parms$inputs$method == 'CML', 
                           list(2,3),
                           as.list(2:(ncol(cf)-1)))
     
-    sketch = tags$table(tableHeader(colnames(cf)))
-  }
+  sketch = tags$table(tableHeader(colnames(cf)))
 
   datatable(cf, rownames = FALSE, class='compact',
             selection = 'single',
@@ -211,20 +162,20 @@ output$enorm_coef = renderDataTable(
 output$enorm_coef_xl_download = downloadHandler(
   filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_enorm_coef.xlsx')},
   content = function(file) {
-    write_xlsx(enorm_coef_table(), file)
+    write_xlsx(coef(values$parms), file)
   }
 )
 output$enorm_coef_csv_download = downloadHandler(
   filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_enorm_coef.csv')},
   content = function(file) {
-    write.csv2(enorm_coef_table(), file, row.names = FALSE, fileEncoding = "utf8")
+    write.csv2(coef(values$parms), file, row.names = FALSE, fileEncoding = "utf8")
   }
 )
 
 observe({
   req(values$parms, input$enorm_slider_nbins, values$update_enorm_plots)
   
-  isolate({selected = enorm_coef_table()[input$enorm_coef_rows_selected,]$item_id})
+  isolate({selected = coef(values$parms)[input$enorm_coef_rows_selected,]$item_id})
   if(length(selected)==0)
     selected=NULL
 
@@ -250,7 +201,7 @@ output$enorm_slider_plot = renderPlot({
 observeEvent(input$enorm_coef_rows_selected,{
 
   updateSlider(session, 'enorm_slider',
-               selected = enorm_coef_table()[input$enorm_coef_rows_selected,]$item_id)
+               selected = coef(values$parms)$item_id[input$enorm_coef_rows_selected])
 })
 
 output$enorm_slider_download = downloadHandler(

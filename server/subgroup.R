@@ -12,7 +12,7 @@ observe({
   items = get_items(db) |>
     inner_join(get_design(db), by='item_id') |>
     filter(booklet_id == input$prof_booklet) |>
-    select(-.data$item_id)
+    select(-"item_id")
   
   iprop = tibble(name=colnames(items), n = sapply(items, n_distinct)) |>
     filter(between(.data$n, 2, nrow(items)/2))
@@ -27,7 +27,7 @@ observe({
                            'SELECT person_id FROM dxadministrations WHERE booklet_id=:booklet;', 
                            list(booklet=input$prof_booklet)),
                 by='person_id') |>
-      select(-.data$person_id)
+      select(-"person_id")
     
     pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) |>
       filter(between(.data$n, 2, 3))
@@ -151,7 +151,7 @@ observe({
   
   if(ncol(values$person_properties)>1)
   {
-    persons = select(values$person_properties, -.data$person_id)
+    persons = select(values$person_properties, -"person_id")
     
     pprop = tibble(name=colnames(persons), n = sapply(persons, n_distinct)) |>
       filter(.data$n==2)

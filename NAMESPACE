@@ -11,7 +11,7 @@ importFrom(htmltools, 'tagAppendAttributes', 'attachDependencies', 'htmlEscape',
 importFrom(jsonlite, 'toJSON', 'unbox')
 importFrom(DBI, 'dbGetQuery', 'dbListFields', 'dbExecute', 'dbExistsTable')
 import(dplyr)
-importFrom(tidyr, 'spread', 'unite', 'gather','pivot_longer','pivot_wider')
+importFrom(tidyr, 'pivot_longer','pivot_wider')
 importFrom(readxl, 'read_excel')
 
 importFrom(writexl, 'write_xlsx')

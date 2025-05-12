@@ -209,8 +209,8 @@ observeEvent(input$rules_file,{
   {
     values$new_rules = rules |>
       mutate(item_score = as.integer(.data$item_score), item_id = as.character(.data$item_id), 
-             response = gsub('\\.0+$','',as.character(.data$response), perl=TRUE)) |>
-      select(.data$item_id, .data$response, .data$item_score)
+             response = coalesce(gsub('\\.0+$','',as.character(.data$response), perl=TRUE),'')) |>
+      distinct(.data$item_id, .data$response, .data$item_score)
     output$rules_upload_error = renderText({''})
   } else if(length(setdiff(c('item_id','noptions','key'),colnames(rules))) == 0)
   {
@@ -241,6 +241,7 @@ observeEvent(input$go_import_new_rules,{
   {
     if(is.null(values$new_rules))
       stop('No file selected')
+    
     touch_rules(db, values$new_rules)
     reset('rules_file')
     init_project()

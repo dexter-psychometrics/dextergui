@@ -137,25 +137,25 @@ matrix_layout = function(npic){
 
 
 # is incidence matrix connected
-im_is_connected = function(im)
-{
-  d = crossprod(im, im)
-  diag(d) = 0
-
-  visited = rep(FALSE, ncol(d))
-  rownames(d) = c(1:nrow(d))
-  colnames(d) = c(1:nrow(d))
-  dfs = function(start) {
-    start = as.integer(start)
-    if (visited[start])
-      return(0)
-    visited[start] <<- TRUE
-    vapply(rownames(d)[d[, start] > 0], dfs, 0)
-    0
-  }
-  dfs(1)
-  return(all(visited))
-}
+# im_is_connected = function(im)
+# {
+#   d = crossprod(im, im)
+#   diag(d) = 0
+# 
+#   visited = rep(FALSE, ncol(d))
+#   rownames(d) = c(1:nrow(d))
+#   colnames(d) = c(1:nrow(d))
+#   dfs = function(start) {
+#     start = as.integer(start)
+#     if (visited[start])
+#       return(0)
+#     visited[start] <<- TRUE
+#     vapply(rownames(d)[d[, start] > 0], dfs, 0)
+#     0
+#   }
+#   dfs(1)
+#   return(all(visited))
+# }
 
 combined_var = function(means,vars,n)
 {
@@ -184,6 +184,12 @@ ctt_items_table = function(items, averaged)
   }
   
   items
+}
+
+tbl_names = function(nms)
+{
+  nms = gsub('((booklet)|(test))_score','score',nms,perl=TRUE)
+  gsub('_(?!id)',' ',nms,perl=TRUE)
 }
 
 

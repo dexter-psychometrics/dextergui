@@ -258,7 +258,7 @@ weighted_hist = function(dat, group=NULL, weights=NULL, nbins=30,  dat_id=NULL, 
       
       h = w_hist(.$theta, w=w, rng=rng, nbins=nbins)
       
-      res = pivot_longer(select(h,'left','right','N','bin'), c(.data$left, .data$right), values_to='theta', names_to='side') |>
+      res = pivot_longer(select(h,'left','right','N','bin'), all_of(c('left','right')), values_to='theta', names_to='side') |>
         arrange(.data$bin, .data$side)
       if(res$N[1]>0)
         res = bind_rows(mutate(res[1,],N=0L), res)
@@ -356,8 +356,6 @@ ability_plot = function(dat, plot_type=c("hist", "box", "ecdf", "dens", "pointra
   plot_theme = theme_minimal(base_size=ifelse(thumbnail,11,14))
   has_group = isTruthy(group)
   
-  if('theta' %in% colnames(dat))
-    dat = filter(dat,is.finite(.data$theta))
   
   aes_weights = if(!isTruthy(weights)){ NULL } else { aes(weight=.data[[weights]]) }
 
@@ -371,6 +369,9 @@ ability_plot = function(dat, plot_type=c("hist", "box", "ecdf", "dens", "pointra
   
   outvar = ifelse(any(grepl('^PV\\d+$',colnames(dat))),'PV1','theta')
   if(outvar=='theta') dat = filter(dat, is.finite(.data$theta))
+  
+  if(isTruthy(weights))
+    dat = filter(dat, is.finite(.data[[weights]]))
   
   if(has_group) dat[[group]] = as.factor(dat[[group]])
   

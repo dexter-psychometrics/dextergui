@@ -85,7 +85,7 @@ example_db = function(name)
   {
     ev = new_environment()
     data('data.bs07a', package='sirt', envir=ev)
-    ev$data.bs07a = select(ev$data.bs07a, -.data$idpatt)
+    ev$data.bs07a = select(ev$data.bs07a, -"idpatt")
     rules = tibble(item_id = sort(rep(colnames(ev$data.bs07a),2)), 
                    response = rep_len(c(0,1),ncol(ev$data.bs07a)*2),
                    item_score = .data$response)
@@ -131,8 +131,8 @@ example_db = function(name)
   {
     ev = new_environment()
     data('SF12', package='MLCIRTwithin', envir=ev)
-    rules = select(ev$SF12, -.data$age) |>
-      gather(key='item_id', value='response') |>
+    rules = select(ev$SF12, -"age") |>
+      pivot_longer(names_to='item_id', values_to='response') |>
       mutate(item_score = if_else(is.na(.data$response),0L,as.integer(.data$response))) |>
       distinct()
     
@@ -154,7 +154,7 @@ example_db = function(name)
     ev = new_environment()
     data('RLMS', package='MLCIRTwithin', envir=ev)
     rules = select(ev$RLMS, starts_with('Y')) |>
-      gather(key='item_id', value='response') |>
+      pivot_longer(names_to='item_id', values_to='response') |>
       mutate(item_score = if_else(is.na(.data$response),0L,as.integer(.data$response))) |>
       distinct()
     

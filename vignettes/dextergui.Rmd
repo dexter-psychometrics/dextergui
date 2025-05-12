@@ -101,7 +101,7 @@ To import response data, select the *Data import* tab in the navigation bar on t
 
 ![](img/main_bar2.PNG)
 
-Response data is imported one booklet at a time. First provide a unique name for the booklet or testform in the field *booklet id*. Next use the *Browse* button to select a file with response data. This file can be in excel or csv format and the first row must contain column names. 
+Response data can be imported in wide format, one booklet at a time, or in long format for an unlimited number of booklets. For a single booklet, first provide a unique name for the booklet the field *booklet id*. Next use the *Browse* button to select a file with response data. This file can be in excel or csv format and the first row must contain column names. 
 
 The column names should be item id's which each have an exact match to the item id's in your scoring rules, note that capitalization matters. You can also include person properties like grade or study program. It is also good practice (but not mandatory) to include a column <i>person_id</i> with a unique identification of each person in your data. Each row in your data, apart from the column names, should represent a single person like in the example below. 
 
@@ -125,7 +125,7 @@ When you select a file, dexter shows a preview of the response data. Any column 
    </tbody> </table>
 
 
-If the preview looks all right you can import the response data by pressing the import button.
+If the preview looks all right you can import the response data by pressing the import button. For long format data you need a design file and a response data file. The exact format can be seen by clicking the question mark button.
 
 
 ## Classical analysis
@@ -241,7 +241,7 @@ The extensive [online documentation for dexter](https://dexter-psychometrics.git
 
 ## Issues
 
-If you have **problems downloading images and data**, the solution is to open the application in a browser (use the *open in browser* button on the top of the screen). Best results are achieved with the *Chrome* browser, although most others work fine. The exception is currently Microsoft Edge, in which the application does not work very well yet.
+If you have **problems saving images and data**, the solution is to open the application in a browser (use the *open in browser* button on the top of the screen). Best results are achieved with the *Chrome* browser, although most others work fine. The exception is currently Microsoft Edge, in which the application does not work very well.
 
 If you have another question, encounter a bug or would like to request a feature, please tell us about it on https://github.com/dexter-psychometrics/dexter/issues . 
 

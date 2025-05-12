@@ -22,6 +22,7 @@ observeEvent(input$go_plausible_values, {
     if(is.null(values$parms)) 
       go_fit_enorm()
 
+    
     covariates = input$plausible_values_covariates
 
     # predicates zijn een beetje tricky als text string

@@ -57,10 +57,16 @@ init_project = function()
     tia$booklets = tia$booklets |>
       inner_join(sparks, by='booklet_id')
     
+    tia$items = inner_join(tia$items, mutate(data$design, across(where(is.factor), as.character)), by=c('booklet_id','item_id')) |>
+      relocate('item_position', .after='booklet_id')
+    
     if(all(grepl('^\\d+$',tia$booklets$booklet_id)))
     {
       tia$tbooklets = arrange(tia$booklets, as.integer(.data$booklet_id))
       tia$items = arrange(tia$items, .data$item_id, as.integer(.data$booklet_id))
+    } else
+    {
+      tia$items = arrange(tia$items, .data$item_id, .data$booklet_id)
     }
     
     values$ctt_items = tia$items

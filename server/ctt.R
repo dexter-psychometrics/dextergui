@@ -21,7 +21,11 @@ output$inter_booklets = renderDataTable({
     }
   })
   
-  datatable({ mutate_if(values$ctt_booklets, is.double,round,digits=2)}, 
+  dat = values$ctt_booklets |>
+    mutate(across(where(is.double),~round(.x,digits=2))) |>
+    rename_with(tbl_names)
+  
+  datatable(dat, 
             rownames = FALSE, selection = list(mode = 'single', selected = selected), 
             class='compact', extensions = 'Buttons',
             options = list(columnDefs = cdef, fnDrawCallback = drawcallback,
@@ -36,13 +40,13 @@ output$inter_booklets = renderDataTable({
 output$inter_booklets_xl_download = downloadHandler(
     filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_ctt_booklets.xlsx')},
     content = function(file) {
-      write_xlsx(select(values$ctt_booklets, -.data$test_score), file)
+      write_xlsx(select(values$ctt_booklets, -"test_score"), file)
     }
 )
 output$inter_booklets_csv_download = downloadHandler(
   filename = function(){paste0(gsub('\\.\\w+$','',basename(values$project_name), perl=TRUE),'_ctt_booklets.csv')},
   content = function(file) {
-    write.csv2(select(values$ctt_booklets, -.data$test_score), file, row.names = FALSE, fileEncoding = "utf8")
+    write.csv2(select(values$ctt_booklets, -"test_score"), file, row.names = FALSE, fileEncoding = "utf8")
   }
 )
 
@@ -136,7 +140,7 @@ output$ctt_items = renderDataTable(
 {
   req(values$ctt_items)
   data = ctt_items_table(values$ctt_items, input$ctt_items_averaged) |>
-    mutate_if(is.double,round,digits=2)
+    mutate(across(where(is.double),~round(.x,digits=2)))
   selected = 1
   search_ = ""
 
@@ -149,8 +153,8 @@ output$ctt_items = renderDataTable(
       search_ = input$ctt_items_search
 
   })  
-
-  datatable(data, 
+  
+  datatable(rename_with(data,tbl_names), 
     rownames = FALSE, selection = list(mode = 'single', selected = selected), class='compact',
     extensions = 'Buttons',
     options = list(dom='<"dropdown" B>lfrtip',
@@ -319,7 +323,7 @@ output$item_rules = renderDataTable({
           'SELECT item_id, response, item_score FROM dxScoring_rules 
                     WHERE item_id=?;', values$selected_ctt_item$item_id) |>
         inner_join(values$distr_legend, by='response') |>
-        select(.data$item_id,legend=.data$color, .data$response, .data$n, .data$item_score)
+        select("item_id",legend="color", "response", "n", "item_score")
       
   sketch = tags$table(
         class = "compact readable",
@@ -366,7 +370,7 @@ observeEvent(input$go_save_ctt_item_rules, {
   req(input$item_rules_data)
 
   new_rules = as_tibble(lapply(input$item_rules_data, unlist)) |>
-      select(.data$item_id, .data$response, item_score = 'score', old_val = 'V6')
+      select("item_id", "response", item_score = 'score', old_val = 'V6')
   
   withBusyIndicatorServer("go_save_ctt_item_rules",
   {

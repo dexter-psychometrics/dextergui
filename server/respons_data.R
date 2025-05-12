@@ -16,7 +16,7 @@ output$show_data_unknown_rsp = renderUI({
     return(tags$b("None of the column names in your data correspond to known item_id's"))
   
   unknown_rsp = values$import_data[,items] |>
-    gather(key='item_id', value='response') |>
+    pivot_longer(names_to='item_id', values_to='response') |>
     mutate(response = if_else(is.na(.data$response), 'NA', as.character(.data$response))) |>
     distinct() |>
     anti_join(get_rules(db), by=c('item_id','response')) |>

@@ -1,69 +1,33 @@
 
 # ability -----------------------------------------------------------------
 
-observe(
-{
-  input$ability_method
-  input$ability_prior
-  if(input$ability_method != 'EAP')
-  {
-    runjs('hide_inputs("#ability_prior,#ability_mu,#ability_sigma")')
-  } else
-  {
-    runjs('show_inputs("#ability_prior")')
-    if(input$ability_prior == 'normal')
-    {
-      runjs('show_inputs("#ability_mu,#ability_sigma")')
-    } else
-    {
-      runjs('hide_inputs("#ability_mu,#ability_sigma")')
-    }
-  }
+observe({
+  toggle(condition=input$ability_method=='EAP', id='ability_prior')
+  toggle(condition = input$ability_method=='EAP' && input$ability_prior == 'normal',selector='#ability_mu,#ability_sigma')
 })
 
-observe(
-  {
-    input$ability_tables_method
-    input$ability_tables_prior
-    
-    runjs('hide_inputs("#ability_tables_use_draw")')
-    
-    if(input$ability_tables_method != 'EAP')
-    {
-      runjs('hide_inputs("#ability_tables_prior,#ability_tables_mu,#ability_tables_sigma")')
-    } else
-    {
-      runjs('show_inputs("#ability_tables_prior")')
-      if(input$ability_tables_prior == 'normal')
-      {
-        runjs('show_inputs("#ability_tables_mu,#ability_tables_sigma")')
-        if(!is.null(values$parms) && values$parms$inputs$method == 'Bayes')
-          runjs('show_inputs("#ability_tables_use_draw")')
-      } else
-      {
-        runjs('hide_inputs("#ability_tables_mu,#ability_tables_sigma")')
-      }
-    }
-  })
+observe({
+  toggle(condition=input$ability_tables_method=='EAP', id='ability_tables_prior')
+  toggle(condition = input$ability_tables_method=='EAP' && input$ability_tables_prior == 'normal',selector='#ability_tables_mu,#ability_tables_sigma')
+})
 
 
 
-
-# to do: check inputs correct
 observeEvent(input$go_ability, {
   withBusyIndicatorServer("go_ability",{
 
     if(is.null(values$parms)) 
       go_fit_enorm()
 
+    
     if(!(is.null(input$ability_predicate) || trimws(input$ability_predicate) == ''))
     {
-      abl = eval(parse(text=paste0("ability(db, parms=values$parms, predicate={",input$ability_predicate,"},method='",input$ability_method,
-                                   "',prior='",input$ability_prior,"',mu=",input$ability_mu,",sigma=",input$ability_sigma,")")))
+      abl = eval(parse(text=sprintf("ability(db, parms = values$parms, predicate={%s}, method='%s', prior='%s', mu=%f, sigma=%f)",
+        input$ability_method, input$ability_prior, input$ability_mu, input$ability_sigma)))
     } else
     {
       abl = ability(db, parms = values$parms, method = input$ability_method, prior = input$ability_prior, 
-                     mu = input$ability_mu, sigma = input$ability_sigma )
+                     mu = input$ability_mu, sigma = input$ability_sigma)
     }
     
     
@@ -112,9 +76,8 @@ observeEvent(input$go_ability_tables, {
       go_fit_enorm()
     
     values$abl_tables = ability_tables(parms = values$parms, method = input$ability_tables_method,
-                                       sigma = input$ability_tables_sigma,
-                                       prior = input$ability_tables_prior)
-      
+      prior = input$ability_tables_prior, sigma = input$ability_tables_sigma, mu = input$ability_tables_mu)
+
     bkl = unique(pull(values$abl_tables, .data$booklet_id))
     
     if(is.null(isolate(input$abl_tables_plot_booklet))){

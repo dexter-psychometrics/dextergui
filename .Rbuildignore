@@ -6,6 +6,6 @@
 ^example
 ^cran-comments\.md$
 ^inno
-^example import files
+^example-import-files
 LICENSE
 ^CRAN-SUBMISSION$
