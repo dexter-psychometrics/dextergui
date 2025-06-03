@@ -1191,8 +1191,9 @@ toggle(id = "abp_fill", condition = input$abp_plotbar$value %in% c("box", "dens"
 toggle(id = "abp_linetype", condition = input$abp_plotbar$value == "line")
 toggle(id = "abp_fitlines", condition = input$abp_plotbar$value == "scat")
 toggle(id = "abp_xvar", condition = input$abp_plotbar$value %in% c("line", "scat"))
-toggle(selector="#abp_cluster,#abp_stratum,#abp_ci", condition = input$abp_plotbar$value == "pointrange")
-toggle(id = "abp_trans", condition = input$abp_fill == TRUE && input$abp_plotbar$value %in% c("hist", "box", "dens"))
+toggle(selector="#abp_cluster,#abp_stratum", condition = input$abp_plotbar$value == "pointrange")
+toggle(id='abp_ci', condition = input$abp_plotbar$value %in% c( "dens", "ecdf","pointrange"))
+toggle(id = "abp_trans", condition = input$abp_fill == TRUE && input$abp_plotbar$value %in% c("hist", "box"))
 toggle("abp_outputformat", condition=input$abp_plotbar$value == 'pointrange')}})
 observe({
 var_info = abp_varinfo()
@@ -1229,23 +1230,18 @@ output$abp_table = renderTable({
 req(values$person_abl,input$abp_plotbar$value == 'pointrange', input$abp_outputformat == 'table')
 dat_id = sprintf("abp_%i", isolate(input$go_ability))
 ci = input$abp_ci
-pv_mean(dat, group=input$abp_group, cluster=input$abp_cluster, stratum=input$abp_stratum,
+pv_mean(values$person_abl, group=input$abp_group, cluster=input$abp_cluster, stratum=input$abp_stratum,
 weights=input$abp_weights, dat_id=dat_id, cache=cache) |>
 mutate(ci_min = .data$estimate + .data$se*qnorm((1-ci)/2),
-ci_max = .data$estimate + .data$se*qnorm(1-(1-ci)/2))})
+ci_max = .data$estimate + .data$se*qnorm(1-(1-ci)/2)) |>
+select(any_of(c(input$abp_group,'estimate','se','ci_min','ci_max')))})
 output$abp_plot = renderPlot({abp_plot()})
 output$abp_download = downloadHandler(
 filename = function(){paste0(values$project_name,'_plausiblevalues.png')},
 content = function(file) {
-png()
-plt = abp_plot() +  theme(axis.text = element_text(size = 8),
-axis.title = element_text(size = 8),
-legend.text = element_text(size = 8),
-legend.title = element_text(size = 8),
-legend.key.size = unit(0.4,"cm"))
-ggsave(file, plot = plt, device = "png", units = 'cm',
-width = input$abp_download_width, height = input$abp_download_height,
-dpi = 600)},
+png(filename=file, type='cairo-png', width=input$abp_download_width,height=input$abp_download_height,units='cm',res=300)
+print(abp_plot())
+dev.off()},
 contentType = "image/png"
 )
 observeEvent(input$go_ability_tables, {
@@ -1283,18 +1279,16 @@ content = function(file) {
 write.csv2(values$person_abl, file, row.names = FALSE, fileEncoding = "utf8")}
 )
 abl_tables_plot_booklet = reactive({input$abl_tables_plot_booklet}) |> debounce(300)
-abl_tables_plot = reactive({
+abl_tables_plot = function(){
 req(values$abl_tables, abl_tables_plot_booklet())
 booklets = abl_tables_plot_booklet()
-abl = filter(values$abl_tables, is.finite(.data$theta)) |>
-inner_join(tibble(booklet_id = booklets), by='booklet_id')
-xmin = floor(min(abl$theta))
-xmax = ceiling(max(abl$theta))
-ymax = ceiling(1/(min(abl$se, na.rm=T)**2))
 colr = qcolors(length(booklets))
 names(colr) = booklets
-abl = abl |>
+abl = filter(values$abl_tables, is.finite(.data$theta)) |>
+semi_join(tibble(booklet_id = booklets), by='booklet_id') |>
 inner_join(values$parms$inputs$scoretab, by=c('booklet_id','booklet_score'))
+xmin = floor(min(abl$theta))
+xmax = ceiling(max(abl$theta))
 offs = (xmax-xmin)/62
 mids = seq(xmin+offs,xmax-offs,length.out=30)
 hist_counts = abl |>
@@ -1307,35 +1301,63 @@ ungroup() |>
 right_join(tibble(x=1:31), by='x') |>
 mutate(y = coalesce(.data$y,0L)) |>
 arrange(.data$x)
+if(input$abl_tables_plot_sel == 'info'){
+ymax = ceiling(1/(min(abl$se, na.rm=T)**2))
+ylab = 'Information'} else if((input$abl_tables_plot_sel == 'SE')){
+ymax = max(abl$se, na.rm=T)
+ylab = 'Standard error'} else if((input$abl_tables_plot_sel == 'score')){
+ymax = max(abl$booklet_score)
+ylab = 'Score'}
 par(mar = c(5,4,3,4))
 barplot(hist_counts$y, axes=FALSE,space=0, ylim=c(0,max(hist_counts$y)*2))
 axis(side=4 )
 par(new=TRUE)
-plot(type='n',x=c(xmin,xmax),y=c(0,ymax),xlab=expression(theta), ylab='Information',bty='l')
+plot(type='n',x=c(xmin,xmax),y=c(0,ymax),xlab=expression(theta), ylab=ylab,bty='l')
 for(bkl in booklets){
+if(input$abl_tables_plot_sel == 'info'){
 plot(information(values$parms, booklet_id = bkl),
-from = xmin, to = xmax, add=TRUE,col = colr[bkl])}
-mtext("n persons", side=4, line=2.5)})
-output$abl_tables_plot_ti = renderPlot({abl_tables_plot()})
-output$abl_tables_plot_ti_download = downloadHandler(
-filename = 'test_information.png',
+from = xmin, to = xmax, add=TRUE,col = colr[bkl])} else{
+w = which(abl$booklet_id==bkl)
+lines(abl$theta[w], if(input$abl_tables_plot_sel=='SE'){ abl$se[w] }else{abl$booklet_score[w]},col = colr[bkl])}}
+mtext("n persons", side=4, line=2.5)}
+output$abl_tables_plot = renderPlot({abl_tables_plot()})
+output$abl_tables_plot_download = downloadHandler(
+filename = function(){
+switch(input$abl_tables_plot_sel, SE='test_se.png',info='test_information.png', score='test_score_ability.png')},
 content = function(file){
 png(filename=file, type='cairo-png', width=960,height=640)
 abl_tables_plot()
 dev.off()},
 contentType = "image/png"
 )
-output$abl_tables_plot_ti_hinf = renderUI({
-req(values$abl_tables, input$abl_tables_plot_ti_hov)
-abl = values$abl_tables
-bkl = abl_tables_plot_booklet()
+output$abl_tables_plot_hinf = renderUI({
+req(values$abl_tables, input$abl_tables_plot_hov)
+bkl = sort(abl_tables_plot_booklet())
+abl = values$abl_tables |>
+filter(is.finite(.data$theta)) |>
+semi_join(tibble(booklet_id=bkl),by='booklet_id')
+plot_type = isolate(input$abl_tables_plot_sel)
 colr = qcolors(length(bkl))
 names(colr) = bkl
-hover = input$abl_tables_plot_ti_hov
+hover = input$abl_tables_plot_hov
 theta = hover$x
+if(plot_type == 'info'){
 bky = sapply(bkl, function(bk){information(values$parms, booklet_id = bk)(theta)})
 req(min(abs(bky-hover$y)) < hover$domain$top/12 )
-booklet_id = bkl[which.min(abs(bky-hover$y))]
+booklet_id = bkl[which.min(abs(bky-hover$y))]} else{
+outvar = if(plot_type == 'SE') 'se' else 'booklet_score'
+res = abl |>
+group_by(booklet_id) |>
+filter(.data$theta %in% suppressWarnings(c(max(.data$theta[.data$theta<.env$theta]),
+min(.data$theta[.data$theta>.env$theta]))),.preserve=TRUE) |>
+filter(n()==2) |>
+arrange(.data[[outvar]]) |>
+summarise(bky =  .data[[outvar]][1] + (.env$theta-.data$theta[1])*(.data[[outvar]][2] - .data[[outvar]][1])/(.data$theta[2]-.data$theta[1])) |>
+ungroup() |>
+mutate(dist = abs(.data$bky-hover$y)) |>
+filter(.data$dist == min(.data$dist))
+req(res$dist < hover$domain$top/12 )
+booklet_id = res$booklet_id}
 left_pct = (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
 top_pct = (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
 left_px = hover$range$left + left_pct * (hover$range$right - hover$range$left)
@@ -1497,8 +1519,9 @@ toggle(id = "pvp_fill", condition = input$pvp_plotbar$value %in% c("box", "dens"
 toggle(id = "pvp_linetype", condition = input$pvp_plotbar$value == "line")
 toggle(id = "pvp_fitlines", condition = input$pvp_plotbar$value == "scat")
 toggle(id = "pvp_xvar", condition = input$pvp_plotbar$value %in% c("line", "scat"))
-toggle(selector="#pvp_cluster,#pvp_stratum,#pvp_ci", condition = input$pvp_plotbar$value == "pointrange")
-toggle(id = "pvp_trans", condition = input$pvp_fill == TRUE && input$pvp_plotbar$value %in% c("hist", "box", "dens"))
+toggle(selector="#pvp_cluster,#pvp_stratum", condition = input$pvp_plotbar$value == "pointrange")
+toggle(id='pvp_ci', condition = input$pvp_plotbar$value %in% c( "dens", "ecdf","pointrange"))
+toggle(id = "pvp_trans", condition = input$pvp_fill == TRUE && input$pvp_plotbar$value %in% c("hist", "box"))
 toggle("pvp_outputformat", condition=input$pvp_plotbar$value == 'pointrange')}})
 observe({
 var_info = pvp_varinfo()
@@ -1535,23 +1558,18 @@ output$pvp_table = renderTable({
 req(values$plausible_values,input$pvp_plotbar$value == 'pointrange', input$pvp_outputformat == 'table')
 dat_id = sprintf("pvp_%i", isolate(input$go_plausible_values))
 ci = input$pvp_ci
-pv_mean(dat, group=input$pvp_group, cluster=input$pvp_cluster, stratum=input$pvp_stratum,
+pv_mean(values$plausible_values, group=input$pvp_group, cluster=input$pvp_cluster, stratum=input$pvp_stratum,
 weights=input$pvp_weights, dat_id=dat_id, cache=cache) |>
 mutate(ci_min = .data$estimate + .data$se*qnorm((1-ci)/2),
-ci_max = .data$estimate + .data$se*qnorm(1-(1-ci)/2))})
+ci_max = .data$estimate + .data$se*qnorm(1-(1-ci)/2)) |>
+select(any_of(c(input$pvp_group,'estimate','se','ci_min','ci_max')))})
 output$pvp_plot = renderPlot({pvp_plot()})
 output$pvp_download = downloadHandler(
 filename = function(){paste0(values$project_name,'_plausiblevalues.png')},
 content = function(file) {
-png()
-plt = pvp_plot() +  theme(axis.text = element_text(size = 8),
-axis.title = element_text(size = 8),
-legend.text = element_text(size = 8),
-legend.title = element_text(size = 8),
-legend.key.size = unit(0.4,"cm"))
-ggsave(file, plot = plt, device = "png", units = 'cm',
-width = input$pvp_download_width, height = input$pvp_download_height,
-dpi = 600)},
+png(filename=file, type='cairo-png', width=input$pvp_download_width,height=input$pvp_download_height,units='cm',res=300)
+print(pvp_plot())
+dev.off()},
 contentType = "image/png"
 )
 observe({

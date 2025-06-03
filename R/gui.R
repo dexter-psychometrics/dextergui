@@ -391,14 +391,15 @@ get_ui = function()
 				      tags$hr(),
 				      tags$div(dataTableOutput('abl_tables'), download_buttons('abl_tables') ),style='max-width:600px;'),
 				    column(6, 
-				      tags$h3('Test information functions'),
+				      tags$h3('Booklets'),
 				      tags$hr(),
 				      tags$div( # this div to give the hovering tooltip a reference point
 				      plot_add_download_btn(
-				        plotOutput('abl_tables_plot_ti', height='400px', 
-				                      hover= hoverOpts("abl_tables_plot_ti_hov", delay = 200, delayType = "debounce"))),
-				      uiOutput("abl_tables_plot_ti_hinf"), style='position:relative;'),
-             selectizeInput('abl_tables_plot_booklet', 'Choose booklets to plot', c(), multiple = TRUE),
+				        plotOutput('abl_tables_plot', height='400px', 
+				                      hover= hoverOpts("abl_tables_plot_hov", delay = 200, delayType = "debounce"))),
+				      uiOutput("abl_tables_plot_hinf"), style='position:relative;'),
+				      selectInput('abl_tables_plot_sel','Plot type',choices=c('Score transformation'='score','Test information'='info','Standard error'='SE')),
+             selectizeInput('abl_tables_plot_booklet', 'Choose booklets to plot', choices=c(), multiple = TRUE),
 				      style="padding-left:4em;"))),
 				tabPanel('Items', value='enorm_items',
 				  fluidRow(

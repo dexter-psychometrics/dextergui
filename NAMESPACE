@@ -19,10 +19,10 @@ importFrom(writexl, 'write_xlsx')
 importFrom(survey,'svymean','svydesign','svyby')
 
 importFrom(RCurl, 'base64Encode')
-importFrom(rlang,'caller_env','.data', ':=','new_environment')
+importFrom(rlang,'caller_env','.data', ':=','new_environment','.env')
 
 importFrom(grDevices, 'dev.off', 'png','boxplot.stats')
-importFrom(graphics, 'par', 'plot', 'boxplot', 'hist','axis','layout','barplot','mtext')
+importFrom(graphics, 'par', 'plot', 'boxplot', 'hist','axis','layout','barplot','mtext','lines')
 importFrom(methods, 'new')
 importFrom(utils, 'help', 'vignette', 'modifyList', 'write.csv2', 'read.csv','unzip','data','packageVersion','install.packages')
 importFrom(stats, 'weighted.mean','coef','density','as.formula', 'qnorm', 'reorder', 'sd', 'smooth.spline', 'var')

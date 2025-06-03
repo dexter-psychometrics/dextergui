@@ -1,11 +1,9 @@
-# dextergui 0.3.0
+# dextergui 1.0.0
 
-* inclusion weights and cluster variables for plausible values
+* inclusion of weights and cluster variables for plausible values
 * plausible values can be combined to produce better confidence intervals
 * new dataset (pirls) to illustrate clusters and weights
-* adapted for new ggplot versions
-
-
+* adapted for deprecated functions in newer ggplot versions
 
 # dextergui 0.2.6
 

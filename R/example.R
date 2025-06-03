@@ -36,11 +36,11 @@ example_datasets_ui = function(...)
     try({out$timss = card('sirt',getHelpList('data.timss','sirt'), 'timss')}, silent=TRUE)
   }
   
-  if (requireNamespace("MLCIRTwithin", quietly = TRUE))
-  {
-    try({out$sf12 = card("MLCIRTwithin",getHelpList('SF12','MLCIRTwithin'), 'SF12')}, silent=TRUE)
-    try({out$rlms = card("MLCIRTwithin",getHelpList('RLMS','MLCIRTwithin'), 'RLMS')}, silent=TRUE)
-  }
+  #if (requireNamespace("MLCIRTwithin", quietly = TRUE))
+  #{
+  #  try({out$sf12 = card("MLCIRTwithin",getHelpList('SF12','MLCIRTwithin'), 'SF12')}, silent=TRUE)
+  #  try({out$rlms = card("MLCIRTwithin",getHelpList('RLMS','MLCIRTwithin'), 'RLMS')}, silent=TRUE)
+  #}
  
   tags$div(do.call(tagList, out), tags$hr(), ...)
 }
@@ -127,45 +127,8 @@ example_db = function(name)
     
     add_item_properties(db, items)
     
-  } else if(name=='SF12')
-  {
-    ev = new_environment()
-    data('SF12', package='MLCIRTwithin', envir=ev)
-    rules = select(ev$SF12, -"age") |>
-      pivot_longer(names_to='item_id', values_to='response') |>
-      mutate(item_score = if_else(is.na(.data$response),0L,as.integer(.data$response))) |>
-      distinct()
-    
-    db = start_new_project(rules, ':memory:', person_properties=list(age = as.double(NA)))
-    
-    add_booklet(db, ev$SF12 |> mutate(age=round(.data$age,1)), 'Sf12')
-    
-    add_item_properties(db,tibble(
-      item_id=paste0('Y',1:12),
-      item_content = c('general health','limits in moderate activities','limits in climbing several flights of stairs','accomplished less than he/she would like, as a result of his/her physical health',
-                       'limited in the kind of work or daily activities, as a result of his/her physical health','accomplished less than he/she would like, as a result of his/her emotional health',
-                       'did work less carefully than usual, as a result of his/her emotional health','how much did pain interfere with normal work',
-                       'how much of the time have he/she felt calm and peaceful','how much of the time did he/she have a lot of energy',
-                       'how much of the time have he/she felt downhearted and depressed','how much of the time physical health or emotional health interfered with social activities')
-    ))
-    
-  } else if(name=='RLMS')
-  {
-    ev = new_environment()
-    data('RLMS', package='MLCIRTwithin', envir=ev)
-    rules = select(ev$RLMS, starts_with('Y')) |>
-      pivot_longer(names_to='item_id', values_to='response') |>
-      mutate(item_score = if_else(is.na(.data$response),0L,as.integer(.data$response))) |>
-      distinct()
-    
-    db = start_new_project(rules, ':memory:', 
-                           person_properties=list(age = as.integer(NA), education = as.integer(NA),
-                                                  marital=as.integer(NA), gender=as.integer(NA),
-                                                  work=as.integer(NA)))
-    
-    add_booklet(db, ev$RLMS, 'Rlms')
-    
   } 
+
 
   
   db

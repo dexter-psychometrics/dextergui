@@ -552,7 +552,8 @@ update_footplot = function(td, html)
 			return '<span style="color:'+c+';">&#9679;</span><span>'+x+': '+y+'</span>';
 		}
 		me.sparkline(values, 
-			{type: 'bar', barColor: '#bfb5b6', barSpacing: 0, zeroAxis: false, barWidth: barw, height:Math.round(height)+'px',width:Math.round(width)+'px',tooltipFormatter:tooltip});
+			{type: 'bar', barColor: '#bfb5b6', barSpacing: 0, zeroAxis: false, barWidth: barw, height:Math.round(height)+'px',width:Math.round(width)+'px',tooltipFormatter:tooltip,
+			highlightColor:'lightgray'});
 			
 			
 		if(axis)

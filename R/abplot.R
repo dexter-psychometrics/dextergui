@@ -16,24 +16,16 @@ pv_mean = function(dat, group=NULL, cluster=NULL, stratum=NULL, weights=NULL, da
   }
   
   dat = ungroup(dat)
-  probs=NULL
+
   v2formula = function(v, default=NULL)
   {
     if(!isTruthy(v)) return(default)
     as.formula(sprintf('~%s',paste(v,collapse='+')))
   }
   
-  if(isTruthy(weights))
-  {
-    if(all(dat[[weights]]<1))
-    {
-      probs = weights
-      weights=NULL
-    }
-    
-  }
+
   dsg = svydesign(ids=v2formula(cluster, default=as.formula('~0')), strata=v2formula(stratum), nest=TRUE, data=dat,
-    probs=v2formula(probs), weights=v2formula(weights))
+     weights=v2formula(weights))
   
   pvnames = colnames(dat)[startsWith(colnames(dat),'PV')]
   if(length(pvnames)==0)

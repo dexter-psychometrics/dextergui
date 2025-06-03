@@ -133,31 +133,19 @@ output$abl_tables_csv_download = downloadHandler(
 abl_tables_plot_booklet = reactive({input$abl_tables_plot_booklet}) |> debounce(300)
 
 
-abl_tables_plot = reactive({
+abl_tables_plot = function(){
   req(values$abl_tables, abl_tables_plot_booklet())
 
   booklets = abl_tables_plot_booklet()
-  
-  abl = filter(values$abl_tables, is.finite(.data$theta)) |>
-    inner_join(tibble(booklet_id = booklets), by='booklet_id') 
-  
-  xmin = floor(min(abl$theta))
-  xmax = ceiling(max(abl$theta))
-  
-  # approximately
-  ymax = ceiling(1/(min(abl$se, na.rm=T)**2))
-
   colr = qcolors(length(booklets))
   names(colr) = booklets
   
-  # to do: search all code for bklist, it does not exist anymore
-  
-  # scoretab = values$parms$inputs$bkList[abl_tables_plot_booklet()] |>
-  #   lapply(function(bk){ tibble(booklet_score=0:(length(bk$scoretab)-1), n=bk$scoretab)} ) |>
-  #   bind_rows(.id = 'booklet_id')
-
-  abl = abl |>
+  abl = filter(values$abl_tables, is.finite(.data$theta)) |>
+    semi_join(tibble(booklet_id = booklets), by='booklet_id') |>
     inner_join(values$parms$inputs$scoretab, by=c('booklet_id','booklet_score'))
+  
+  xmin = floor(min(abl$theta))
+  xmax = ceiling(max(abl$theta))
   
   #make a histogram, 31 bins, from weighted data, range xmin,xmax
   offs = (xmax-xmin)/62
@@ -172,29 +160,55 @@ abl_tables_plot = reactive({
     right_join(tibble(x=1:31), by='x') |>
     mutate(y = coalesce(.data$y,0L)) |>
     arrange(.data$x)
-  
+
+  if(input$abl_tables_plot_sel == 'info')
+  {
+    # approximately
+    ymax = ceiling(1/(min(abl$se, na.rm=T)**2))
+    ylab = 'Information'
+    
+  } else if((input$abl_tables_plot_sel == 'SE'))
+  {
+    ymax = max(abl$se, na.rm=T)
+    ylab = 'Standard error'
+    
+  } else if((input$abl_tables_plot_sel == 'score'))
+  {
+    ymax = max(abl$booklet_score)
+    ylab = 'Score'
+  }
+
   par(mar = c(5,4,3,4))
 
   barplot(hist_counts$y, axes=FALSE,space=0, ylim=c(0,max(hist_counts$y)*2))
   axis(side=4 ) 
   
   par(new=TRUE)
-  plot(type='n',x=c(xmin,xmax),y=c(0,ymax),xlab=expression(theta), ylab='Information',bty='l')
+  plot(type='n',x=c(xmin,xmax),y=c(0,ymax),xlab=expression(theta), ylab=ylab,bty='l')
   
   for(bkl in booklets)
   {
-    plot(information(values$parms, booklet_id = bkl), 
-         from = xmin, to = xmax, add=TRUE,col = colr[bkl])
+    if(input$abl_tables_plot_sel == 'info')
+    {
+      plot(information(values$parms, booklet_id = bkl), 
+           from = xmin, to = xmax, add=TRUE,col = colr[bkl])
+    } else 
+    {
+      w = which(abl$booklet_id==bkl)
+      lines(abl$theta[w], if(input$abl_tables_plot_sel=='SE'){ abl$se[w] }else{abl$booklet_score[w]},col = colr[bkl])
+    }
   }
 
   mtext("n persons", side=4, line=2.5)
 
-})
+}
 
-output$abl_tables_plot_ti = renderPlot({abl_tables_plot()})
+output$abl_tables_plot = renderPlot({abl_tables_plot()})
 
-output$abl_tables_plot_ti_download = downloadHandler(
-  filename = 'test_information.png',
+output$abl_tables_plot_download = downloadHandler(
+  filename = function(){
+    switch(input$abl_tables_plot_sel, SE='test_se.png',info='test_information.png', score='test_score_ability.png')
+  },
   content = function(file){
     png(filename=file, type='cairo-png', width=960,height=640)
     abl_tables_plot()
@@ -205,25 +219,48 @@ output$abl_tables_plot_ti_download = downloadHandler(
 
 
 
-
-output$abl_tables_plot_ti_hinf = renderUI({
+output$abl_tables_plot_hinf = renderUI({
   
-  req(values$abl_tables, input$abl_tables_plot_ti_hov)
-  abl = values$abl_tables
-  bkl = abl_tables_plot_booklet()
+  req(values$abl_tables, input$abl_tables_plot_hov)
+  bkl = sort(abl_tables_plot_booklet())
+  abl = values$abl_tables |>
+    filter(is.finite(.data$theta)) |>
+    semi_join(tibble(booklet_id=bkl),by='booklet_id')
+  plot_type = isolate(input$abl_tables_plot_sel)
   colr = qcolors(length(bkl))
   names(colr) = bkl
 
-  hover = input$abl_tables_plot_ti_hov
+  hover = input$abl_tables_plot_hov
 
   theta = hover$x
-  bky = sapply(bkl, function(bk){information(values$parms, booklet_id = bk)(theta)})
   
-  # needs to be somewhat close or we don't plot
-  req(min(abs(bky-hover$y)) < hover$domain$top/12 )
-  
-  booklet_id = bkl[which.min(abs(bky-hover$y))]
+  if(plot_type == 'info')
+  {
+    bky = sapply(bkl, function(bk){information(values$parms, booklet_id = bk)(theta)})
+    # needs to be somewhat close or we don't plot
+    req(min(abs(bky-hover$y)) < hover$domain$top/12 )
+    booklet_id = bkl[which.min(abs(bky-hover$y))]
+  } else
+  {
+    outvar = if(plot_type == 'SE') 'se' else 'booklet_score'
 
+    res = abl |>
+      group_by(booklet_id) |>
+      filter(.data$theta %in% suppressWarnings(c(max(.data$theta[.data$theta<.env$theta]), 
+                                                  min(.data$theta[.data$theta>.env$theta]))),.preserve=TRUE) |>
+      filter(n()==2) |>
+      arrange(.data[[outvar]]) |>
+      summarise(bky =  .data[[outvar]][1] + (.env$theta-.data$theta[1])*(.data[[outvar]][2] - .data[[outvar]][1])/(.data$theta[2]-.data$theta[1])) |>
+      ungroup() |>
+      mutate(dist = abs(.data$bky-hover$y)) |>
+      filter(.data$dist == min(.data$dist))
+    
+
+    req(res$dist < hover$domain$top/12 )
+    booklet_id = res$booklet_id
+  }
+
+  
 
   # calculate point position INSIDE the image as percent of total dimensions
   # from left (horizontal) and from top (vertical)

@@ -212,9 +212,10 @@ observeEvent(c(.prefix.varinfo(), input$.prefix.plotbar$value),
       toggle(id = ".prefix.linetype", condition = input$.prefix.plotbar$value == "line")
       toggle(id = ".prefix.fitlines", condition = input$.prefix.plotbar$value == "scat")
       toggle(id = ".prefix.xvar", condition = input$.prefix.plotbar$value %in% c("line", "scat"))
-      toggle(selector="#.prefix.cluster,#.prefix.stratum,#.prefix.ci", condition = input$.prefix.plotbar$value == "pointrange")
+      toggle(selector="#.prefix.cluster,#.prefix.stratum", condition = input$.prefix.plotbar$value == "pointrange")
+      toggle(id='.prefix.ci', condition = input$.prefix.plotbar$value %in% c( "dens", "ecdf","pointrange"))
 
-      toggle(id = ".prefix.trans", condition = input$.prefix.fill == TRUE && input$.prefix.plotbar$value %in% c("hist", "box", "dens"))
+      toggle(id = ".prefix.trans", condition = input$.prefix.fill == TRUE && input$.prefix.plotbar$value %in% c("hist", "box"))
       
       toggle(".prefix.outputformat", condition=input$.prefix.plotbar$value == 'pointrange')
     }
@@ -281,10 +282,11 @@ output$.prefix.table = renderTable({
   dat_id = sprintf(".prefix.%i", isolate(.caller.))
   ci = input$.prefix.ci
   
-  pv_mean(dat, group=input$.prefix.group, cluster=input$.prefix.cluster, stratum=input$.prefix.stratum, 
+  pv_mean(.dat., group=input$.prefix.group, cluster=input$.prefix.cluster, stratum=input$.prefix.stratum, 
     weights=input$.prefix.weights, dat_id=dat_id, cache=cache) |>
     mutate(ci_min = .data$estimate + .data$se*qnorm((1-ci)/2),
-      ci_max = .data$estimate + .data$se*qnorm(1-(1-ci)/2))
+      ci_max = .data$estimate + .data$se*qnorm(1-(1-ci)/2)) |>
+    select(any_of(c(input$.prefix.group,'estimate','se','ci_min','ci_max')))
 })
 
 
@@ -294,16 +296,10 @@ output$.prefix.download = downloadHandler(
   filename = function(){paste0(values$project_name,'_plausiblevalues.png')},
   content = function(file) {
     
-    png()
-    plt = .prefix.plot() +  theme(axis.text = element_text(size = 8),
-      axis.title = element_text(size = 8),
-      legend.text = element_text(size = 8),
-      legend.title = element_text(size = 8),
-      legend.key.size = unit(0.4,"cm"))
-    
-    ggsave(file, plot = plt, device = "png", units = 'cm', 
-      width = input$.prefix.download_width, height = input$.prefix.download_height,
-      dpi = 600)
+    png(filename=file, type='cairo-png', width=input$.prefix.download_width,height=input$.prefix.download_height,units='cm',res=300)
+    print(.prefix.plot())
+    dev.off()
+
   },
   contentType = "image/png"
 )
