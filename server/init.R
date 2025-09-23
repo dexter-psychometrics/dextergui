@@ -45,7 +45,7 @@ init_project = function()
 
     ## prepare CTT ##
     
-    tia = tia_tables(data, type='raw')
+    tia = tia_tables(data, type='raw',max_scores='theoretical',omit_item_novar = FALSE)
     
     # don't need to make distinct by person since nbr of items is equal within booklet
     sparks = data$x |>
