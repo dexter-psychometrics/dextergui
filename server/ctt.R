@@ -3,10 +3,11 @@
 
 output$inter_booklets = renderDataTable({
   req(values$ctt_booklets)
+
   cdef = list(list(targets = ncol(values$ctt_booklets)-1, 
                    render = JS("function(data, type, full){ return '<span class=\"sparkbox\">' + data + '</span>' }")),
-              list(className = "numeric", targets = list(7)),
-              list(className = "dec-2", targets = list(2,3,4,5)))
+              list(className = "numeric", targets = int_col_indx(values$ctt_booklets)-1L),
+              list(className = "dec-2", targets = double_col_indx(values$ctt_booklets)-1L))
   
   
   
@@ -153,7 +154,7 @@ output$ctt_items = renderDataTable(
       search_ = input$ctt_items_search
 
   })  
-  
+
   datatable(rename_with(data,tbl_names), 
     rownames = FALSE, selection = list(mode = 'single', selected = selected), class='compact',
     extensions = 'Buttons',
@@ -162,8 +163,8 @@ output$ctt_items = renderDataTable(
                    buttons = dt_buttons('ctt_items', title='ctt_items'),
                    search = list(search = search_, smart=FALSE),
                    pageLength = 20, scrollX = TRUE,
-                   columnDefs = list(list(className = "numeric", targets = list(8)),
-                                     list(className = "dec-2", targets = list(2,3,5,6,7))),
+                   columnDefs = list(list(className = "numeric", targets = int_col_indx(data)-1L),
+                                     list(className = "dec-2", targets = double_col_indx(data)-1L)),
                    fnDrawCallback = JS('dt_numcol'),
                    initComplete = JS(paste0(
                                       'function(dtsettings){

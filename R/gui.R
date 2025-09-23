@@ -106,9 +106,9 @@ get_ui = function()
 		             style='display:inline-block;font-weight:bold;vertical-align:bottom;margin-bottom:5px'),
 		    class='project-buttons'),
 		  tags$div(
-		    generate_inputs(start_new_project_from_oplm, inline=TRUE, width='100px', omit=c('format','missing_character'),
+		    generate_inputs(start_new_project_from_oplm, inline=TRUE, width='100px', 
 		                    input_type = list(booklet_position='range', person_id='range', responses_start='numeric', 
-		                                      dbname='file_savename'),
+		                                      dbname='file_savename', missing_character='multistring'),
 		                    label='Start project'),
 		    tableOutput('oplm_dat'),
 		    tags$hr(),

@@ -10,6 +10,9 @@ if.else = function(a,b,c)
 is_integer_ = function(x) is.integer(x) || (is.numeric(x) && all(x %% 1 == 0))
 is_double_ = function(x) is.double(x) && !all(x %% 1 == 0)
 
+int_col_indx = function(df) unname(which(sapply(df,is_integer_)))
+double_col_indx = function(df) unname(which(sapply(df,is_double_)))
+
 dropNulls = function(x) x[!vapply(x, is.null, FUN.VALUE = logical(1))]
 
 # colors derived from http://colorbrewer2.org
@@ -135,27 +138,6 @@ matrix_layout = function(npic){
 }
 
 
-
-# is incidence matrix connected
-# im_is_connected = function(im)
-# {
-#   d = crossprod(im, im)
-#   diag(d) = 0
-# 
-#   visited = rep(FALSE, ncol(d))
-#   rownames(d) = c(1:nrow(d))
-#   colnames(d) = c(1:nrow(d))
-#   dfs = function(start) {
-#     start = as.integer(start)
-#     if (visited[start])
-#       return(0)
-#     visited[start] <<- TRUE
-#     vapply(rownames(d)[d[, start] > 0], dfs, 0)
-#     0
-#   }
-#   dfs(1)
-#   return(all(visited))
-# }
 
 combined_var = function(means,vars,n)
 {

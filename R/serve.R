@@ -272,6 +272,9 @@ if(input$start_new_project_from_oplm_booklet_position[2] >= input$start_new_proj
 stop('responses overlap with booklet_id')
 if(!is.null(db))
 close_project(db)
+tf = tempfile(fileext='.txt')
+sink(tf)
+res = try({
 db <<- start_new_project_from_oplm(
 dbname = as.character(new_proj_fn$datapath),
 dat_path = as.character(data_file$datapath),
@@ -280,7 +283,23 @@ booklet_position = input$start_new_project_from_oplm_booklet_position,
 responses_start = input$start_new_project_from_oplm_responses_start,
 person_id = input$start_new_project_from_oplm_person_id,
 use_discrim = input$start_new_project_from_oplm_use_discrim,
-response_length = input$start_new_project_from_oplm_response_length)
+response_length = input$start_new_project_from_oplm_response_length,
+skip_invalid_booklets = input$start_new_project_from_oplm_skip_invalid_booklets,
+missing_character = unlist(input$start_new_project_from_oplm_missing_character))},silent=TRUE)
+sink()
+cons_output = readLines(tf)
+unlink(tf)
+if(inherits(res,'try-error')){
+e = attr(res,'condition')
+if(grepl('Invalid responses',e$message,ignore.case = TRUE)){
+start = which(startsWith(trimws(cons_output),'item_id')) +1
+end = max(which(grepl('^\\d+\\s+',cons_output,perl=TRUE)))
+inv_rsp = cons_output[start:end]
+inv_rsp = unique(regmatches(inv_rsp,regexpr('\\S+(?=\\s+\\d+$)',inv_rsp,perl=TRUE)))
+e$message = paste("The following responses were found in the data but they are not defined in the .scr file or coded as missing responses.",
+"Possible causes are that not all missing characters are correctly specified, your screen and dat files do not match or responses_start is incorrect.",
+"Invalid response:", paste('"',inv_rsp,'"', collapse=', '))}
+stop(e)}
 values$ctt_items_settings$keep_search = FALSE
 init_project()
 values$project_name = gsub('\\.\\w+$','',basename(new_proj_fn$datapath), perl=TRUE)
@@ -664,8 +683,8 @@ output$inter_booklets = renderDataTable({
 req(values$ctt_booklets)
 cdef = list(list(targets = ncol(values$ctt_booklets)-1,
 render = JS("function(data, type, full){ return '<span class=\"sparkbox\">' + data + '</span>' }")),
-list(className = "numeric", targets = list(7)),
-list(className = "dec-2", targets = list(2,3,4,5)))
+list(className = "numeric", targets = int_col_indx(values$ctt_booklets)-1L),
+list(className = "dec-2", targets = double_col_indx(values$ctt_booklets)-1L))
 drawcallback = init_sparks(.box = list(chartRangeMin = 0, chartRangeMax = max(values$ctt_booklets$max_booklet_score)),
 add_js='dt_numcol(settings);')
 selected = 1
@@ -766,8 +785,8 @@ options = list(dom='<"dropdown" B>lfrtip',
 buttons = dt_buttons('ctt_items', title='ctt_items'),
 search = list(search = search_, smart=FALSE),
 pageLength = 20, scrollX = TRUE,
-columnDefs = list(list(className = "numeric", targets = list(8)),
-list(className = "dec-2", targets = list(2,3,5,6,7))),
+columnDefs = list(list(className = "numeric", targets = int_col_indx(data)-1L),
+list(className = "dec-2", targets = double_col_indx(data)-1L)),
 fnDrawCallback = JS('dt_numcol'),
 initComplete = JS(paste0(
 'function(dtsettings){

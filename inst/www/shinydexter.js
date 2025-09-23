@@ -147,7 +147,7 @@ $.extend(erangeBinding, {
 
 Shiny.inputBindings.register(erangeBinding);
 
-
+// custom multitextpinut
 
 
 
@@ -275,14 +275,39 @@ $(function()
     return(false);
   });
   
+  // multistringinput behavior
+  $('body').on('click','.multistringinput button.add-field', function(e){
+	var new_input = $(this).parent().find('input[type=text]').first().clone();
+	new_input.val("");
+	new_input.insertBefore($(this));	
+  });
+  
+  $('body').on('keydown','.multistringinput input[type=text]', function(e){
+	var i = $(this);
+	if( (e.keyCode == 8 || e.keyCode == 46) && i.val() == "" && i.parent().find('input[type=text]').length > 1)
+	{
+		event.preventDefault();
+		i.remove();
+	}
+  });
+  
+  $('body').on('change','.multistringinput input[type=text]', function(e){
+	var inputs = $(this).parent().find('input[type=text]');
+	var id = $(this).closest('div.shiny-input-container').attr('id');
+	
+	Shiny.onInputChange(id, inputs.map(function(i,e){return $(e).val()}).get().filter((word) => word.length > 0));
+  });  
+  // end multistringinput
 
   $('body').on('change','.shiny-color-picker', function(e)
   {
     Shiny.onInputChange(this.id, $(this).val());
   });
   
+  //trigger change on custom elements 
    $(document).on('shiny:sessioninitialized', function(event) {
     $('.shiny-color-picker').trigger('change');
+	$('.multistringinput input:first-child').trigger('change');
   });
   
   $('#example_datasets div[data-dataset]').click(function(e){

@@ -230,6 +230,20 @@ css_divide = function(css, divide_by)
 }
 
 
+multistringInput = function(inputId, label, value="", inline=FALSE)
+{
+  inp_width = 3+min(10,coalesce(max(nchar(coalesce(value,'x')))))
+  input_style = sprintf('margin-right:1px;float:left;width:%sex;padding:5px;',inp_width)
+  inputs = tagList(lapply(value,\(v) tags$input(type='text',class="form-control", value=v,style=input_style)))
+  
+  tags$div(
+    tags$label(label,class="control-label"),
+    tags$br(),
+    tags$div(inputs, tags$button('+', type='button', class="btn btn-secondary add-field"),style='display:inline-block;'),
+    class=paste0("form-group shiny-input-container multistringinput",ifelse(inline,' shiny-input-container-inline','')), 
+    id=inputId)
+}
+
 
 rangeInput = function(inputId, label, value=NULL, min = NA, max = NA, step = 1, width, inline=FALSE)
 {
@@ -369,6 +383,7 @@ generate_inputs = function(fun, id = deparse(substitute(fun)),
                                  choices=c(TRUE,FALSE), selected = arg, inline = inline, width = width),
           `range` = rangeInput(paste(id, argname,sep='_'), label = argname, 
                                 value = if.else(missing(arg), NULL, arg), width = css_divide(width,1.5), inline=inline, min=1),
+          multistring = multistringInput(paste(id, argname,sep='_'), label = argname, value = eval(arg), inline=inline),
           file_input = tagAppendAttributes(
                           fileInput(paste(id, argname,sep='_'), label = argname, width = '200px'),
                           style="display:inline-block;margin-bottom:0px;vertical-align:top;"),
