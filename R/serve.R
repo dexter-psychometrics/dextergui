@@ -120,7 +120,7 @@ for(bkl in booklets){
 env = new.env()
 env$bkl = eval(bkl)
 interaction_models$assign(bkl, {fit_inter(resp_data_bkl(data, bkl))}, env=env)}
-tia = tia_tables(data, type='raw')
+tia = tia_tables(data, type='raw',max_scores='theoretical',omit_item_novar = FALSE)
 sparks = data$x |>
 group_by(.data$booklet_id) |>
 summarise(test_score = sparkbox_vals(.data$booklet_score)) |>
@@ -298,7 +298,7 @@ inv_rsp = cons_output[start:end]
 inv_rsp = unique(regmatches(inv_rsp,regexpr('\\S+(?=\\s+\\d+$)',inv_rsp,perl=TRUE)))
 e$message = paste("The following responses were found in the data but they are not defined in the .scr file or coded as missing responses.",
 "Possible causes are that not all missing characters are correctly specified, your screen and dat files do not match or responses_start is incorrect.",
-"Invalid response:", paste('"',inv_rsp,'"', collapse=', '))}
+"Invalid responses:", paste('"',inv_rsp,'"', collapse=', '))}
 stop(e)}
 values$ctt_items_settings$keep_search = FALSE
 init_project()

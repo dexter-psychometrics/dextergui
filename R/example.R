@@ -52,9 +52,14 @@ example_db = function(name)
   if(name=='pirls3')
   {
     x = readRDS(system.file('extdata/p3.rds',package='dextergui'))
+    
     x$persons = mutate(x$persons,person_id=paste(.data$idcntry,.data$idschool,.data$idstud,sep='_')) |>
       select(-'idstud') |>
-      mutate(idschool=paste(.data$idcntry,.data$idschool,sep='_'))
+      group_by(.data$idcntry) |>
+      mutate(senwgt = 500*.data$totwgt/sum(.data$totwgt)) |>
+      ungroup() |>
+      mutate(idschool=paste(.data$idcntry,.data$idschool,sep='_'),
+             original_booklet_id = gsub(' .+$','',.data$booklet_id, perl=TRUE))
     
     x$rsp = mutate(x$rsp,person_id=paste(.data$idcntry,.data$idschool,.data$idstud,sep='_'))
     x$rsp = inner_join(x$rsp,select(x$persons, 'person_id','booklet_id'),by='person_id')
