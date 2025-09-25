@@ -115,7 +115,7 @@ dextergui = function(dbpath = NULL, wd = getwd(), roots = NULL)
     if(!is.null(dbpath)) 
       db = open_project(dbpath)
     
-    cache = lru_cache(50)
+    cache = lru_cache(80)
     
     # defaults are always reset in init_project
     default_reactive = list(rules = NULL, new_rules = NULL, ctt_items=NULL, ctt_booklets=NULL,

@@ -1,3 +1,8 @@
+# dextergui 1.0.1
+
+* adapted to reflect improvements in dexter 1.7.0: mean and sd of booklets score in tia, more functionality in importing oplm data
+
+
 # dextergui 1.0.0
 
 * inclusion of weights and cluster variables for plausible values

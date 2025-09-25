@@ -220,9 +220,9 @@ Once you have estimated a model you can use it in several ways with the tabs bel
 
 When you have calibrated your model dexter can compute ability estimates for each person. You have a choice of using a Maximum Likelihood Estimate (MLE) or an Expected a Priori (EAP) estimate with choice of a Jeffreys or a normal prior. 
 
-Plausible values are random samples from the posterior distribution of ability. They are closer to the true distribution of ability in the population than straightforward ability estimates. Plausible values are continuous, as opposed to ability estimates which are granular because of the discrete nature of test scores. Therefore the distribution is much smoother.
+Plausible values are random samples from the posterior distribution of ability. They are closer to the true distribution of ability in the population than straightforward ability estimates. Plausible values are continuous, as opposed to ability estimates which are granular because of the discrete nature of test scores. Therefore the distribution is much smoother. 
 
-There is an extremely rich selection of plots to see how ability is distributed in your population(s). Enriching your data with person properties (see the projects tab) will let you make the most of these. You can also view or download the estimated abilities per person.
+There is an extremely rich selection of plots to see how ability is distributed in your population(s). Enriching your data with person properties (see the projects tab) will let you make the most of these. You can also view or download the estimated abilities per person. Dextergui allows the use of weights, cluster and stratification variables.
 
 ![](img/abplot.PNG){width=75%}
 

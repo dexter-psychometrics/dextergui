@@ -349,6 +349,13 @@ ability_plot = function(dat, plot_type=c("hist", "box", "ecdf", "dens", "pointra
   # assign("debug", x, envir = .GlobalEnv)
   # end debugging
   
+  # we do not need much precision for thumbnail, exclude line/scat since they use just 1 pv anyways
+  if(thumbnail && 'PV6' %in% colnames(dat) && !is.null(dat_id) && !plot_type %in% c("line", "scat"))
+  {
+    dat_id = paste0(dat_id,'_thumb')
+    dat = select(dat,-matches('^PV\\d{2,}$'),-matches('^PV[6-9]$'))
+  }
+
   stackfacet = match.arg(stackfacet)
   plot_type = match.arg(plot_type)
 
@@ -609,6 +616,7 @@ ability_plot = function(dat, plot_type=c("hist", "box", "ecdf", "dens", "pointra
       ggtitle(rstr_eval(title,dat)) +
       theme(plot.title = element_text(size = 20))
   }
+  
   
   p
 }

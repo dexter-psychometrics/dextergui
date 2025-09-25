@@ -175,7 +175,8 @@ output$DIF_plot = renderPlot({
       arrange(.data[[input$DIF_item]]) |>
       pull(.data$item_id)
   }
-  plot(DIF_object(), items=items, cex.axis=1)
+  par(mar=c(6.4,5.8,3.5,2.5),cex=0.9)
+  plot(DIF_object(), items=items, cex.axis=.9)
 })
 
 
@@ -199,7 +200,8 @@ output$DIF_plot_download = downloadHandler(
     }
     
     png(filename=file, type='cairo-png', width=960,height=640)
-    plot(DIF_object(), items=items,cex.axis=1)
+    par(mar=c(6.4,5.8,3.5,2.5))
+    plot(DIF_object(), items=items,cex.axis=.75)
     dev.off()
     
   },

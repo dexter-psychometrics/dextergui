@@ -68,7 +68,7 @@ db = NULL
 options(shiny.usecairo = TRUE, shiny.maxRequestSize = 100*1024^2, dexter.progress=FALSE)
 if(!is.null(dbpath))
 db = open_project(dbpath)
-cache = lru_cache(50)
+cache = lru_cache(80)
 default_reactive = list(rules = NULL, new_rules = NULL, ctt_items=NULL, ctt_booklets=NULL,
 inter_booklet = NULL, inter_plot_items = NULL, item_properties=NULL,
 import_data=NULL, import_data_long=NULL, import_design_long=NULL, parms=NULL, person_abl = NULL, selected_ctt_item = NULL,
@@ -1695,7 +1695,8 @@ if(input$DIF_item != 'item_id'){
 items = get_items(db) |>
 arrange(.data[[input$DIF_item]]) |>
 pull(.data$item_id)}
-plot(DIF_object(), items=items, cex.axis=1)})
+par(mar=c(6.4,5.8,3.5,2.5),cex=0.9)
+plot(DIF_object(), items=items, cex.axis=.9)})
 output$DIF_text = renderPrint({
 DIF_object()})
 output$DIF_plot_download = downloadHandler(
@@ -1709,7 +1710,8 @@ items = get_items(db) |>
 arrange(.data[[input$DIF_item]]) |>
 pull(.data$item_id)}
 png(filename=file, type='cairo-png', width=960,height=640)
-plot(DIF_object(), items=items,cex.axis=1)
+par(mar=c(6.4,5.8,3.5,2.5))
+plot(DIF_object(), items=items,cex.axis=.75)
 dev.off()},
 contentType = "image/png"
 )

@@ -227,13 +227,6 @@ theme_nothing = function()
         plot.margin = unit(c(0, 0, 0, 0), "lines"), complete = TRUE)
 }
 
-# solve invalid names for aes string
-qaes_string = function(...){
-  args = sapply(list(...), function(x) {paste0('`',x,'`')}, simplify=FALSE, USE.NAMES=TRUE )
-  do.call(aes_string, args)
-}
-
-
 
 # guess parameters for read.csv
 # based on heuristics
