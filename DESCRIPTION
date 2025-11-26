@@ -1,7 +1,7 @@
 Package: dextergui
 Type: Package
 Title: A Graphical User Interface for Dexter
-Version: 1.0.1
+Version: 1.0.2
 Authors@R: c(person("Jesse","Koops", role = c("aut", "cre"), email="jesse.koops@cito.nl"),
               person("Eva","de Schipper", role = c("aut")),
               person("Ivailo","Partchev", role = c("aut", "ctb")),
@@ -43,7 +43,7 @@ Imports:
     methods,
     utils,
     tools
-RoxygenNote: 7.0.2
+RoxygenNote: 7.3.3
 Suggests: 
     knitr,
     psych,

@@ -241,8 +241,16 @@ observeEvent(input$rules_file,{
     output$rules_upload_error = renderText({''})
   } else if(length(setdiff(c('item_id','noptions','key'),colnames(rules))) == 0)
   {
-    values$new_rules = keys_to_rules(rules |> mutate(nOptions = as.integer(.data$noptions)))
-    output$rules_upload_error = renderText({''})
+    res = try(keys_to_rules(rules |> mutate(noptions = as.integer(.data$noptions))), silent=TRUE)
+    if(inherits(res,'try-error'))
+    {
+      values$new_rules = NULL
+      output$rules_upload_error = renderText({as.character(res)})
+    } else
+    {
+      values$new_rules = res
+      output$rules_upload_error = renderText({''})
+    }
   } else
   {
     output$output$rules_upload_error = renderText(

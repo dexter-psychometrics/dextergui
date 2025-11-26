@@ -14,7 +14,7 @@
 #'
 #' @details
 #' The best results are achieved when the gui is opened in a browser (Chrome, Brave, FireFox). Somewhat
-#' less aesthetically pleasing results are achieved in Internet Explorer. The Edge browser is not supported at this time.
+#' less aesthetically pleasing results are achieved in Internet Explorer/Edge.
 #'
 #' The RStudio browser does not currently support downloads of plots and tables. Starting the gui
 #' in your default browser automatically can be achieved in several ways. One way, shown below,
@@ -324,8 +324,12 @@ mutate(item_score = as.integer(.data$item_score), item_id = as.character(.data$i
 response = coalesce(gsub('\\.0+$','',as.character(.data$response), perl=TRUE),'')) |>
 distinct(.data$item_id, .data$response, .data$item_score)
 output$rules_upload_error = renderText({''})} else if(length(setdiff(c('item_id','noptions','key'),colnames(rules))) == 0){
-values$new_rules = keys_to_rules(rules |> mutate(nOptions = as.integer(.data$noptions)))
-output$rules_upload_error = renderText({''})} else{
+res = try(keys_to_rules(rules |> mutate(noptions = as.integer(.data$noptions))), silent=TRUE)
+if(inherits(res,'try-error')){
+values$new_rules = NULL
+output$rules_upload_error = renderText({as.character(res)})} else{
+values$new_rules = res
+output$rules_upload_error = renderText({''})}} else{
 output$output$rules_upload_error = renderText({
 paste0('The input file has to contain columns (item_id, item_score, response) ',
 'or (item_id, nOptions, key)')})
