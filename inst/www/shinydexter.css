@@ -536,7 +536,35 @@ button.inline{
     border: 1px solid lightgray;
 }
 
+.sdtooltip {
+    background-color: black;
+    color: white;
+    border: 1px solid gray;
+    border-radius: 5px;
+    padding: 4px;
+    z-index: 100;
+}
 
+.sdtooltip::before{
+	content: "";
+
+    position: absolute;
+
+    z-index: -1;
+
+    display: block;
+    height: 11px;
+    width: 11px;
+
+    transform: rotate(45deg);
+
+    background-color: black;
+    border: 1px solid gray;
+	top:-6px;
+	left:50%;
+	border-bottom:none;
+	border-right:none;
+}
 
 
 /************* BOOTSTRAP (FUTURE) ***************/

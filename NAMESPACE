@@ -2,7 +2,8 @@
 import(dexter)
 
 import(shiny, except = c('renderDataTable', 'dataTableOutput'))
-importFrom(shinyBS, 'bsTooltip')
+#importFrom(shinyBS, 'bsTooltip')
+
 importFrom(shinyjs, 'useShinyjs', 'runjs', 'show', 'hide', 'hidden','reset','toggle')
 importFrom(DT, 'renderDataTable', 'dataTableOutput', 'JS', 'datatable', 'tableHeader', 'tableFooter', 'dataTableProxy', 'replaceData')
 importFrom(shinyFiles, 'parseSavePath', 'parseFilePaths', 'shinySaveButton', 

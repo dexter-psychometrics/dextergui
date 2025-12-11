@@ -52,7 +52,7 @@ generate_server = function()
   
   while(str_detect(skeleton,regex('^\\.\\.include', multiline=TRUE)))
   {
-    skeleton = str_replace_all(skeleton, regex('^\\.\\.include[^\\)]+\\)', multiline=TRUE), \(x) eval(parse(text=x)))
+    skeleton = str_replace_all(skeleton, regex('^\\.\\.include[^\\)]+\\)', multiline=TRUE), \(x) sapply(x,\(y) eval(parse(text=y))))
   }
   
 

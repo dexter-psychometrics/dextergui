@@ -36,12 +36,6 @@ example_datasets_ui = function(...)
     try({out$timss = card('sirt',getHelpList('data.timss','sirt'), 'timss')}, silent=TRUE)
   }
   
-  #if (requireNamespace("MLCIRTwithin", quietly = TRUE))
-  #{
-  #  try({out$sf12 = card("MLCIRTwithin",getHelpList('SF12','MLCIRTwithin'), 'SF12')}, silent=TRUE)
-  #  try({out$rlms = card("MLCIRTwithin",getHelpList('RLMS','MLCIRTwithin'), 'RLMS')}, silent=TRUE)
-  #}
- 
   tags$div(do.call(tagList, out), tags$hr(), ...)
 }
 
@@ -134,7 +128,5 @@ example_db = function(name)
     
   } 
 
-
-  
   db
 }

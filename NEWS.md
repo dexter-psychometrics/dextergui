@@ -1,3 +1,7 @@
+# dextergui 1.0.2
+
+* removed dependency on shinyBS since it seems about to be removed from cran
+
 # dextergui 1.0.1
 
 * adapted to reflect improvements in dexter 1.7.0: mean and standard deviation of booklets score in tia, more functionality in importing oplm data
@@ -6,7 +10,7 @@
 # dextergui 1.0.0
 
 * inclusion of weights and cluster variables for plausible values
-* plausible values can be combined to produce better confidence intervals
+* multiple plausible values can be combined to produce better confidence intervals
 * new dataset (pirls) to illustrate clusters and weights
 * adapted for deprecated functions in newer ggplot versions
 

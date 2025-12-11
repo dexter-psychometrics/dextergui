@@ -1,5 +1,6 @@
 
-fixes for deprecated functions/parameters in ggplot
+removed dependency on shinyBS,
 
 kind regards,
+
 Jesse

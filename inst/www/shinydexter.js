@@ -22,6 +22,53 @@ var shinydexter = {
   ph_var_autocomplete: {}
 };
 
+var sdtooltips = {}
+
+// not working on selectinput
+//position a little off for fileinput
+showtooltip = function(e)
+{
+	console.log(e);
+	var container = $(e.target).closest('.shiny-input-container, .btn.shiny-bound-input');
+	var id = container.is('.shiny-bound-input, .multistringinput') ? container.attr('id') : container.find('.shiny-bound-input').attr('id');
+	console.log('id: '+ id);
+	if(id in sdtooltips)
+	{
+		setTimeout(function(){
+			if(container.is(':hover') && $('#'+id+'_tooltip').length==0) 
+			{
+				$('.sdtooltip').remove();	
+				var offset = container.offset();
+				var top = offset.top + container.outerHeight() + 9;
+				var left = Math.max(10, offset.left + container.outerWidth()/2 - 100);
+				
+				if(container.find('.progress').length > 0)
+				{
+					top = container.find('.progress').offset().top + 12;
+				}
+				
+				var tt = $('<div>')
+					.addClass('sdtooltip')
+					.attr({'id': id+'_tooltip'})
+					.html(sdtooltips[id])
+					.css({'position':'absolute','left': left+'px', 'top': top+'px','width':Math.max(container.outerWidth(),200) +'px'});
+				
+				$('body').append(tt);
+				
+			}
+		},300);
+	}
+}
+
+removetooltip = function(e)
+{
+	var container = $(e.target).closest('.shiny-input-container, .btn.shiny-bound-input');
+	var id = container.is('.shiny-bound-input, .multistringinput') ? container.attr('id') : container.find('.shiny-bound-input').attr('id');
+	console.log('out-id: '+ id);
+	$('#'+id+'_tooltip').remove();
+}
+
+
 
 get_input_groups = function(selector)
 {
@@ -148,7 +195,6 @@ $.extend(erangeBinding, {
 Shiny.inputBindings.register(erangeBinding);
 
 // custom multitextpinut
-
 
 
 
@@ -527,6 +573,9 @@ $(function()
 	return(false);
   });
 
+
+	$('body').on('mouseenter','.shiny-input-container, .btn.shiny-bound-input' , showtooltip);
+	$('body').on('mouseleave','.shiny-input-container, .btn.shiny-bound-input', removetooltip);
 
 
 
