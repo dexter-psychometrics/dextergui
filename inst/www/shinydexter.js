@@ -575,7 +575,7 @@ $(function()
 
 
 	$('body').on('mouseenter','.shiny-input-container, .btn.shiny-bound-input' , showtooltip);
-	$('body').on('mouseleave','.shiny-input-container, .btn.shiny-bound-input', removetooltip);
+	$('body').on('mouseleave mouseup','.shiny-input-container, .btn.shiny-bound-input', removetooltip);
 
 
 
