@@ -28,7 +28,7 @@ dt_readable = function(dt_output){
   dt_output
 }
 
-bsTooltip = function(id,title,options)
+bsTooltip = function(id,title)
 {
   #shinyBS::bsTooltip(id,title,options=options)
   tags$script(JS(sprintf('sdtooltips["%s"]="%s";', id, title)))
@@ -405,8 +405,7 @@ generate_inputs = function(fun, id = deparse(substitute(fun)),
 
       tgs[[paste(tt_id,'tip',sep='_')]] = bsTooltip(
           tt_id,
-          clean_help_text(hlp$arguments[[argname]]) ,
-          options=list(delay=300, html=TRUE))
+          clean_help_text(hlp$arguments[[argname]]))
     }
   }
 
@@ -417,7 +416,7 @@ generate_inputs = function(fun, id = deparse(substitute(fun)),
     tgs[[paste0('go_', id)]] = go_button(paste0('go_', id), label, class = paste('btn btn-primary',ifelse(inline,'inline','')))
   }
   
-  if(tooltip) tgs[[paste0(id,'descr')]] = bsTooltip(paste0('go_', id), gsub('\n',' ', hlp$description), options=list(delay=300))
+  if(tooltip) tgs[[paste0(id,'descr')]] = bsTooltip(paste0('go_', id), gsub('\n',' ', hlp$description))
   do.call(tagList,tgs)
 }
 

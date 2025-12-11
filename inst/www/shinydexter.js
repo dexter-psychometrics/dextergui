@@ -28,10 +28,10 @@ var sdtooltips = {}
 //position a little off for fileinput
 showtooltip = function(e)
 {
-	console.log(e);
+
 	var container = $(e.target).closest('.shiny-input-container, .btn.shiny-bound-input');
 	var id = container.is('.shiny-bound-input, .multistringinput') ? container.attr('id') : container.find('.shiny-bound-input').attr('id');
-	console.log('id: '+ id);
+
 	if(id in sdtooltips)
 	{
 		setTimeout(function(){
@@ -51,7 +51,7 @@ showtooltip = function(e)
 					.addClass('sdtooltip')
 					.attr({'id': id+'_tooltip'})
 					.html(sdtooltips[id])
-					.css({'position':'absolute','left': left+'px', 'top': top+'px','width':Math.max(container.outerWidth(),200) +'px'});
+					.css({'position':'absolute','left': left+'px', 'top': top+'px','width':Math.max(container.outerWidth(),220) +'px'});
 				
 				$('body').append(tt);
 				
