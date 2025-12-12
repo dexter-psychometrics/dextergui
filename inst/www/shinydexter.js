@@ -64,7 +64,6 @@ removetooltip = function(e)
 {
 	var container = $(e.target).closest('.shiny-input-container, .btn.shiny-bound-input');
 	var id = container.is('.shiny-bound-input, .multistringinput') ? container.attr('id') : container.find('.shiny-bound-input').attr('id');
-	console.log('out-id: '+ id);
 	$('#'+id+'_tooltip').remove();
 }
 

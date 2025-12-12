@@ -35,7 +35,9 @@ observeEvent(input$go_plausible_values, {
     {
       pv = plausible_values(db, parms=values$parms, nPV = input$plausible_values_nPV, covariates=covariates)
     }
-    persons = values$person_properties[,!colnames(values$person_properties) %in% covariates]
+
+    persons = values$person_properties[,!colnames(values$person_properties) %in% covariates,drop=FALSE]
+
     if(ncol(persons)>1){
       pv = inner_join(pv,persons,by='person_id')}
     values$plausible_values = pv

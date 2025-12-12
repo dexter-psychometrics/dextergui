@@ -342,7 +342,7 @@ ability_plot = function(dat, plot_type=c("hist", "box", "ecdf", "dens", "pointra
 {
 
   # debugging
-  # x= list(dat=dat, plot_type=plot_type,  color=color, alpha=alpha, bins=bins,group=group,cluster=cluster, stratum=stratum, ci=ci, xvar=xvar, stackfacet =stackfacet, 
+  # x= list(dat=dat, plot_type=plot_type,  color=color, alpha=alpha, bins=bins,group=group,cluster=cluster, stratum=stratum, ci=ci, xvar=xvar, stackfacet =stackfacet,
   #   fitlines=fitlines, linetype=linetype, title=title,xlab=xlab,ylab=ylab,
   #   grid=grid,fill=fill, weights=weights, thumbnail=thumbnail)
   # 

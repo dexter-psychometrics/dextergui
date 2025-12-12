@@ -100,8 +100,8 @@ enable_panes = function(panes)
 
 set_js_vars = function(db, session)
 {
-  vr = get_variables(db) 
-  vr = vr[,!colnames(vr) %in% c('item_screenshot','item_html')]
+  vr = get_variables(db)
+  vr = vr[!vr$name %in% c('item_screenshot','item_html'),]
     
   session$sendCustomMessage(type = 'set_js_vars', 
                             message=list(data = list(variables = vr)))

@@ -413,7 +413,7 @@ observeEvent(input$go_import_new_itemprop,
     reset('itemprop_file')
     set_js_vars(db, session)
     items = get_items(db)
-    values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
+    values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href'),drop=FALSE]
     if(ncol(values$item_properties) > 1)
     {
       show('ctt_itemprop-btn')
@@ -437,7 +437,7 @@ observeEvent(input$item_properties_add_column,{
   add_item_properties(db, default_values=dflt)
   items = get_items(db)
 
-  values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
+  values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href'),drop=FALSE]
   set_js_vars(db, session)
   show('ctt_itemprop-btn')
 })

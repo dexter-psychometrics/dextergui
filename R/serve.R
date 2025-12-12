@@ -111,7 +111,7 @@ rules = get_rules(db)
 persons = get_persons(db) |> mutate_if(is_integer_, as.integer)
 values$rules = rules
 items = as_tibble(get_items(db))
-values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
+values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href'),drop=FALSE]
 values$person_properties = persons
 interaction_models$clear()
 if(length(booklets) > 0){
@@ -421,7 +421,7 @@ values$new_item_properties = NULL
 reset('itemprop_file')
 set_js_vars(db, session)
 items = get_items(db)
-values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
+values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href'),drop=FALSE]
 if(ncol(values$item_properties) > 1){
 show('ctt_itemprop-btn')} else{
 hide(selector = '#ctt_itemprop, #ctt_itemprop-btn')}})})
@@ -433,7 +433,7 @@ dflt = list(tc(val$prop_dflt))
 names(dflt) = val$prop_name
 add_item_properties(db, default_values=dflt)
 items = get_items(db)
-values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
+values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href'),drop=FALSE]
 set_js_vars(db, session)
 show('ctt_itemprop-btn')})
 output$new_itemcontents_preview = renderUI({
@@ -528,7 +528,7 @@ items = intersect(dbGetQuery(db,'SELECT item_id FROM dxItems;')$item_id,
 colnames(values$import_data))
 if(length(items) == 0)
 return(tags$b("None of the column names in your data correspond to known item_id's"))
-unknown_rsp = values$import_data[,items] |>
+unknown_rsp = values$import_data[,items,drop=FALSE] |>
 pivot_longer(names_to='item_id', values_to='response') |>
 mutate(response = if_else(is.na(.data$response), 'NA', as.character(.data$response))) |>
 distinct() |>
@@ -1410,7 +1410,7 @@ if(!(is.null(input$plausible_values_predicate) || trimws(input$plausible_values_
 pv = eval(parse(text=paste0("plausible_values(db, parms=values$parms, nPV = input$plausible_values_nPV,covariates=covariates,",
 "predicate={",input$plausible_values_predicate,"})")))} else{
 pv = plausible_values(db, parms=values$parms, nPV = input$plausible_values_nPV, covariates=covariates)}
-persons = values$person_properties[,!colnames(values$person_properties) %in% covariates]
+persons = values$person_properties[,!colnames(values$person_properties) %in% covariates,drop=FALSE]
 if(ncol(persons)>1){
 pv = inner_join(pv,persons,by='person_id')}
 values$plausible_values = pv

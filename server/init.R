@@ -25,7 +25,7 @@ init_project = function()
   persons = get_persons(db) |> mutate_if(is_integer_, as.integer)
   values$rules = rules
   items = as_tibble(get_items(db))
-  values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href')]
+  values$item_properties = items[,!colnames(items) %in% c('item_screenshot','item_html','item_href'),drop=FALSE]
   values$person_properties = persons
   
   interaction_models$clear()
