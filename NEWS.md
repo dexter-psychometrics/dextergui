@@ -1,3 +1,8 @@
+# dextergui 1.0.4
+
+* samll updates to reflect new option in dexter 1.8.0+
+
+
 # dextergui 1.0.3
 
 * removed dependency on shinyBS since it seems about to be removed from cran

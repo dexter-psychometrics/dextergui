@@ -81,18 +81,12 @@ output$prof_plot = renderPlot({
     colnames(dat)[colnames(dat) == 'p'] = input$prof_item
   }
 
-  if(packageVersion("dexter") >= '1.1.5')
-  {
-    profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
+
+  profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
                  main=input$prof_item, 
                  x=paste(input$prof_item_xvals, collapse=','), 
                  cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)
-  } else
-  {
-    profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
-                 main=input$prof_item, 
-                 x=paste(input$prof_item_xvals, collapse=','))
-  }
+ 
 })
 
 output$prof_plot_download = downloadHandler(
@@ -125,18 +119,10 @@ output$prof_plot_download = downloadHandler(
     }
     
     png(filename=file, type='cairo-png', width=960,height=640)
-    if(packageVersion("dexter") >= '1.1.5')
-    {
-      profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
+    profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
                    main=input$prof_item, 
                    x=paste(input$prof_item_xvals, collapse=','), 
                    cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)
-    } else
-    {
-      profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person, 
-                   main=input$prof_item, 
-                   x=paste(input$prof_item_xvals, collapse=','))
-    }
     dev.off()
     
   },

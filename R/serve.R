@@ -967,6 +967,7 @@ NodeID = 'name', Group = 'group')})
 output$fit_enorm_result = renderUI({
 req(values$parms)
 x = values$parms
+gibbs_iter = if(packageVersion("dexter") >= '1.8.0') ncol(x$est$beta) else nrow(x$est$beta)
 tagList(
 tags$hr(),
 tags$p(tags$i('Calibration:')),
@@ -975,7 +976,7 @@ tags$tbody(
 tags$tr(tags$th('method: '), tags$td(x$inputs$method)),
 if.else(x$inputs$method == 'CML',
 tags$tr(tags$th('iterations: '), tags$td(x$est$n_iter)),
-tags$tr(tags$th('Gibbs samples: '), tags$td(nrow(x$est$beta)))),
+tags$tr(tags$th('Gibbs samples: '), tags$td(gibbs_iter))),
 tags$tr(tags$th('items:'), tags$td(nrow(x$inputs$ssI))),
 tags$tr(tags$th('responses: '), tags$td(sum(x$inputs$ssIS$sufI))))))})
 go_fit_enorm = function(){
@@ -985,6 +986,8 @@ input$enorm_method,"')")))
 values$parms$xpr = input$enorm_predicate} else{
 values$parms = fit_enorm(db, method=input$enorm_method)}
 show(selector='#enorm_tabs + div.tab-content > div.tab-pane[data-value="enorm_items"] > *')
+toggle(condition=values$parms$inputs$method == 'Bayes', selector='#ability_tables_parms_draw,#ability_parms_draw,#plausible_values_parms_draw')
+toggle(condition=values$parms$inputs$method == 'CML', selector='#plausible_values_link_error')
 isolate({
 values$update_enorm_plots = (input$enorm_tabs == 'enorm_items')})}
 observeEvent(input$enorm_tabs,{
@@ -1644,14 +1647,10 @@ group_by(.data$g) |>
 mutate(p = paste(.data$val, collapse=','))
 dat = inner_join(prop, dat, by=c('val'=input$prof_item))
 colnames(dat)[colnames(dat) == 'p'] = input$prof_item}
-if(packageVersion("dexter") >= '1.1.5'){
 profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person,
 main=input$prof_item,
 x=paste(input$prof_item_xvals, collapse=','),
-cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)} else{
-profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person,
-main=input$prof_item,
-x=paste(input$prof_item_xvals, collapse=','))}})
+cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)})
 output$prof_plot_download = downloadHandler(
 filename = function(){
 paste0('profile_',input$prof_booklet,input$prof_item,'.png')},
@@ -1671,14 +1670,10 @@ mutate(p = paste(.data$val, collapse=','))
 dat = inner_join(prop, dat, by=c('val'=input$prof_item))
 colnames(dat)[colnames(dat) == 'p'] = input$prof_item}
 png(filename=file, type='cairo-png', width=960,height=640)
-if(packageVersion("dexter") >= '1.1.5'){
 profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person,
 main=input$prof_item,
 x=paste(input$prof_item_xvals, collapse=','),
-cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)} else{
-profile_plot(dat, item_property = input$prof_item, covariate = input$prof_person,
-main=input$prof_item,
-x=paste(input$prof_item_xvals, collapse=','))}
+cex.legend=1.2,cex.axis=1.2,cex.lab=1.2,cex.main=1.2)
 dev.off()},
 contentType = "image/png"
 )

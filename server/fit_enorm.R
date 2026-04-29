@@ -75,6 +75,8 @@ output$fit_enorm_result = renderUI(
   req(values$parms)
   x = values$parms
 
+  gibbs_iter = if(packageVersion("dexter") >= '1.8.0') ncol(x$est$beta) else nrow(x$est$beta)
+
   tagList(
     tags$hr(),
     tags$p(tags$i('Calibration:')),
@@ -83,7 +85,7 @@ output$fit_enorm_result = renderUI(
         tags$tr(tags$th('method: '), tags$td(x$inputs$method)),
         if.else(x$inputs$method == 'CML', 
           tags$tr(tags$th('iterations: '), tags$td(x$est$n_iter)),
-          tags$tr(tags$th('Gibbs samples: '), tags$td(nrow(x$est$beta)))),
+          tags$tr(tags$th('Gibbs samples: '), tags$td(gibbs_iter))),
         tags$tr(tags$th('items:'), tags$td(nrow(x$inputs$ssI))),
         tags$tr(tags$th('responses: '), tags$td(sum(x$inputs$ssIS$sufI))))))
 })
@@ -108,6 +110,8 @@ go_fit_enorm = function()
   
   #print(values$parms$inputs$method)
   #toggle(condition=values$parms$inputs$method == 'Bayes', selector='#ability_tables_parms_draw,#ability_parms_draw,#plausible_values_parms_draw')
+
+  toggle(condition=values$parms$inputs$method == 'CML', selector='#plausible_values_link_error')
   
   isolate({
     # if not on the relevant tab, postpone updating the slider, it can take a long time with many items
